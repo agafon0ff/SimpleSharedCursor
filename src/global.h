@@ -7,7 +7,7 @@
 #include <QUuid>
 #include <QRect>
 
-inline const char* CONFIG_PATH = "config.ini";
+inline const char* CONFIG_PATH = "config.json";
 inline const char* PROGRAM_NAME = "ShareCursor";
 
 inline const char* KEY_SEARCH_REQUEST = "searchRequest";
@@ -19,6 +19,7 @@ inline const char* KEY_SPLITTER = "splitter";
 inline const char* KEY_KEYWORD = "keyword";
 inline const char* KEY_NAME = "name";
 inline const char* KEY_UUID = "uuid";
+inline const char* KEY_ALL = "all";
 inline const char* KEY_DEVICES = "devices";
 inline const char* KEY_HASHSUM = "hashsum";
 inline const char* KEY_NONCE = "nonce";

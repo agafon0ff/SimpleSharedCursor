@@ -1,26 +1,16 @@
 #include <QJsonDocument>
-#include <QMutexLocker>
 #include <QFileInfo>
+#include <QObject>
 #include <QFile>
 #include <QDir>
 
-#include "settingsloader.h"
+#include "jsonloader.h"
 
-const char* CONFIG_PATH = "config.json";
-const char* CONFIG_BACKUP_PATH = "config.json~";
-const char* PROGRAM_NAME = "ShareCursor";
-
-SettingsLoader &SettingsLoader::instance()
-{
-    static SettingsLoader * const ptr = new SettingsLoader();
-    return *ptr;
-}
-
-void SettingsLoader::load()
+void JsonLoader::load(const char* path)
 {
     QByteArray jsonData;
-    QFile configFile(CONFIG_PATH);
-    QFile backupFile(CONFIG_BACKUP_PATH);
+    QFile configFile(path);
+    QFile backupFile(configFile.fileName() + "~");
 
     if(configFile.open(QIODevice::ReadOnly))
     {
@@ -54,16 +44,16 @@ void SettingsLoader::load()
     }
 }
 
-void SettingsLoader::save()
+void JsonLoader::save(const char* path)
 {
-    QFileInfo fInfo(CONFIG_PATH);
+    QFileInfo fInfo(path);
     if(!fInfo.dir().exists())
     {
         QDir dir;
         dir.mkpath(fInfo.dir().path());
     }
 
-    QFile file(CONFIG_PATH);
+    QFile file(path);
     if(file.open(QIODevice::WriteOnly))
     {
         file.write(QJsonDocument(values).toJson());
@@ -71,39 +61,25 @@ void SettingsLoader::save()
     }
 }
 
-void SettingsLoader::setValue(const char *key, const QJsonValue &value)
+void JsonLoader::setValue(const char *key, const QJsonValue &value)
 {
-    QMutexLocker locker(&mutex);
-
     if (values.contains(key)) {
         values[key] = value;
     }
     else {
         values.insert(key, value);
     }
-
-    save();
 }
 
-QJsonValue SettingsLoader::value(const char *key, const QJsonValue &defaultValue)
+QJsonValue JsonLoader::value(const char *key, const QJsonValue &defaultValue)
 {
     if(values.contains(key)) {
         return values.value(key);
     }
-    else {
-        if(!defaultValue.isNull())
-            setValue(key, defaultValue);
+
+    if(!defaultValue.isNull()) {
+        setValue(key, defaultValue);
     }
 
     return defaultValue;
-}
-
-SettingsLoader::SettingsLoader()
-{
-    load();
-}
-
-SettingsLoader::~SettingsLoader()
-{
-    save();
 }

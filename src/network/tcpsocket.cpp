@@ -2,7 +2,7 @@
 #include <QDebug>
 
 #include "tcpsocket.h"
-#include "settingsloader.h"
+#include "settingsfacade.h"
 #include "utils.h"
 
 TcpSocket::TcpSocket(QObject *parent)
@@ -11,8 +11,6 @@ TcpSocket::TcpSocket(QObject *parent)
     connect(this, &QTcpSocket::readyRead, this, &TcpSocket::onReadyRead);
     connect(this, &QTcpSocket::connected, this, &TcpSocket::onConnected);
     connect(this, &QTcpSocket::disconnected, this, &TcpSocket::onDisconnected);
-
-    sslWraper.setKey(Settings.value(KEY_KEYWORD).toString().toLocal8Bit());
 }
 
 TcpSocket::~TcpSocket()
@@ -40,6 +38,11 @@ bool TcpSocket::isUuidEqual(const QUuid &_uuid) const
 QUuid TcpSocket::getUuid() const
 {
     return uuid;
+}
+
+void TcpSocket::setKeyword(const QString &keyword)
+{
+    sslWraper.setKey(keyword.toLocal8Bit());
 }
 
 void TcpSocket::setUuid(const QUuid &_uuid)

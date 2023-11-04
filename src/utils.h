@@ -11,7 +11,7 @@
 #include <QUuid>
 
 #include "global.h"
-#include "settingsloader.h"
+#include "settingsfacade.h"
 
 namespace Utils {
 

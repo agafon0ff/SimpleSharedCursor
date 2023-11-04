@@ -4,6 +4,7 @@ CONFIG += c++17
 INCLUDEPATH += \
     src \
     src/network \
+    src/settings \
     src/widgets
 
 SOURCES += \
@@ -11,7 +12,8 @@ SOURCES += \
     src/main.cpp \
     src/network/deviceconnectmanager.cpp \
     src/network/tcpsocket.cpp \
-    src/settingsloader.cpp \
+    src/settings/jsonloader.cpp \
+    src/settings/settingsfacade.cpp \
     src/opensslwrapper.cpp \
     src/network/broadcastdevicesearch.cpp \
     src/network/tcpserver.cpp \
@@ -25,7 +27,8 @@ HEADERS += \
     src/global.h \
     src/network/deviceconnectmanager.h \
     src/network/tcpsocket.h \
-    src/settingsloader.h \
+    src/settings/jsonloader.h \
+    src/settings/settingsfacade.h \
     src/opensslwrapper.h \
     src/network/broadcastdevicesearch.h \
     src/network/tcpserver.h \

@@ -1,54 +1,18 @@
 #include "broadcastdevicesearch.h"
 #include "deviceconnectmanager.h"
 #include "settingswidget.h"
-#include "settingsloader.h"
+#include "settingsfacade.h"
 #include "cursorhandler.h"
 #include "global.h"
-#include "utils.h"
 
-#include <QGuiApplication>
 #include <QApplication>
 #include <QTranslator>
 #include <QThreadPool>
-#include <QJsonArray>
-#include <QHostInfo>
 #include <QLocale>
 #include <QThread>
-#include <QScreen>
 #include <QUuid>
 
 #include <QDebug>
-
-void saveMyself() {
-    QString strUuid = Settings.value(KEY_UUID).toString();
-
-    if (strUuid.isEmpty()) {
-        strUuid = QUuid::createUuid().toString();
-        Settings.setValue(KEY_UUID, strUuid);
-    }
-
-    QJsonObject devices = Settings.value(KEY_DEVICES).toObject();
-    if (devices.contains(strUuid))
-        return;
-
-    QJsonObject device;
-    device.insert(KEY_UUID, QUuid::createUuid().toString());
-    device.insert(KEY_NAME, QHostInfo::localHostName());
-    device.insert(KEY_HOST, "127.0.0.1");
-    device.insert(KEY_SELF, true);
-    device.insert(KEY_UUID, strUuid);
-
-    QVector<QRect> resolutions;
-    QList <QScreen*> screens = QGuiApplication::screens();
-    for (QScreen *screen: qAsConst(screens))
-        resolutions.append(screen->geometry());
-
-    device.insert(KEY_SCREENS, Utils::rectListToJsonValue(resolutions));
-    device.insert(KEY_POSITION, Utils::pointToJsonValue(QPoint(0, 0)));
-
-    devices.insert(strUuid, device);
-    Settings.setValue(KEY_DEVICES, devices);
-}
 
 int main(int argc, char *argv[])
 {
@@ -67,8 +31,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    saveMyself();
-
     QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount());
 
     CursorHandler cursorHandler;
@@ -78,6 +40,9 @@ int main(int argc, char *argv[])
     cursorHandler.moveToThread(&cursorCheckerThread);
 
     DeviceConnectManager devConnectManager;
+    devConnectManager.setUuid(Settings.uuid());
+    devConnectManager.setKeyword(Settings.keyword());
+
     QThread devConnectManagerThread;
     QObject::connect(&devConnectManagerThread, &QThread::started, &devConnectManager, &DeviceConnectManager::start);
     QObject::connect(&devConnectManagerThread, &QThread::finished, &devConnectManager, &DeviceConnectManager::stop);
@@ -87,6 +52,8 @@ int main(int argc, char *argv[])
     settingsWidget.show();
 
     BroadcastDeviceSearch deviceSearch;
+    deviceSearch.setUuid(Settings.uuid());
+    deviceSearch.setKeyword(Settings.keyword());
     deviceSearch.start();
 
     QObject::connect(&settingsWidget, &SettingsWidget::findDevices, &deviceSearch, &BroadcastDeviceSearch::search);

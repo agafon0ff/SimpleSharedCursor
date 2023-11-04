@@ -1,11 +1,6 @@
 #pragma once
 
-#include <QSslCertificate>
-#include <QSslSocket>
-#include <QSslKey>
 #include <QTcpServer>
-#include <QTcpSocket>
-
 #include "global.h"
 
 class TcpServer : public QTcpServer
@@ -15,8 +10,9 @@ public:
     explicit TcpServer(QObject *parent = nullptr);
     virtual ~TcpServer();
 
-public slots:
     void setPort(quint16 port);
+
+public slots:
     void start();
     void stop();
 

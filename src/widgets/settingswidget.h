@@ -40,4 +40,5 @@ private:
     void createFoundDeviceWidget(QSharedPointer<Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);
     void onScreenPositionChanged(const QUuid &uuid, const QPoint &pos);
+    void onBtnOkClicked();
 };

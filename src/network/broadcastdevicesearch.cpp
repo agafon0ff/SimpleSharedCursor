@@ -2,16 +2,13 @@
 #include <QDebug>
 
 #include "broadcastdevicesearch.h"
-#include "settingsloader.h"
+#include "settingsfacade.h"
 #include "utils.h"
 
 BroadcastDeviceSearch::BroadcastDeviceSearch(QObject *parent)
     : QObject{parent}
 {
     connect(&udpSocket, &QUdpSocket::readyRead, this, &BroadcastDeviceSearch::onSocketReadyRead);
-
-    sslWraper.setKey(Settings.value(KEY_KEYWORD).toString().toLocal8Bit());
-
     qDebug() << Q_FUNC_INFO;
 }
 
@@ -55,6 +52,18 @@ void BroadcastDeviceSearch::setPort(quint16 _port)
     port = _port;
 }
 
+void BroadcastDeviceSearch::setUuid(const QUuid &_uuid)
+{
+    qDebug() << Q_FUNC_INFO << _uuid.toString();
+    uuid = _uuid.toString();
+}
+
+void BroadcastDeviceSearch::setKeyword(const QString &keyword)
+{
+    qDebug() << Q_FUNC_INFO;
+    sslWraper.setKey(keyword.toLocal8Bit());
+}
+
 void BroadcastDeviceSearch::onSocketReadyRead()
 {
     QHostAddress senderHost;
@@ -93,7 +102,7 @@ void BroadcastDeviceSearch::handleSearchRequest(const QHostAddress &host, const 
     if (!jObject.contains(KEY_UUID) || !jObject.contains(KEY_NAME))
         return;
 
-    if (Settings.value(KEY_UUID).toString() == jObject.value(KEY_UUID).toString())
+    if (uuid == jObject.value(KEY_UUID).toString())
         return;
 
     Utils::fillDeviceJsonMessage(jsonOut, KEY_SEARCH_RESPONSE);
