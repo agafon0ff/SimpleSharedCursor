@@ -6,10 +6,11 @@
 
 #include "jsonloader.h"
 
-void JsonLoader::load(const char* path)
+void JsonLoader::load(const char* path, bool backup)
 {
     QByteArray jsonData;
     QFile configFile(path);
+
     QFile backupFile(configFile.fileName() + "~");
 
     if(configFile.open(QIODevice::ReadOnly))
@@ -21,6 +22,9 @@ void JsonLoader::load(const char* path)
 
     QJsonParseError jsonError;
     values = QJsonDocument::fromJson(jsonData, &jsonError).object();
+
+    if (!backup)
+        return;
 
     if(jsonError.error != QJsonParseError::NoError)
     {

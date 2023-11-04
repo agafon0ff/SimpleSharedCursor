@@ -75,9 +75,9 @@ inline QVector<QRect> jsonValueToRectList(const QJsonValue &jValue)
 inline void fillDeviceJsonMessage(QJsonObject &jsonOut, const char* type)
 {
     jsonOut.insert(KEY_TYPE, type);
-    jsonOut.insert(KEY_UUID, Settings.value(KEY_UUID).toString());
-    jsonOut.insert(KEY_NAME, Settings.value(KEY_NAME).toString());
-    jsonOut.insert(KEY_SCREENS, Settings.value(KEY_SCREENS));
+    jsonOut.insert(KEY_NAME, Settings.name());
+    jsonOut.insert(KEY_UUID, Settings.uuid().toString());
+    jsonOut.insert(KEY_SCREENS, rectListToJsonValue(Settings.screens()));
 }
 
 };

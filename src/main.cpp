@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
     cursorHandler.moveToThread(&cursorCheckerThread);
 
     DeviceConnectManager devConnectManager;
+    devConnectManager.setPort(Settings.portTcp());
     devConnectManager.setUuid(Settings.uuid());
     devConnectManager.setKeyword(Settings.keyword());
 
@@ -52,15 +53,16 @@ int main(int argc, char *argv[])
     settingsWidget.show();
 
     BroadcastDeviceSearch deviceSearch;
+    deviceSearch.setPort(Settings.portUdp());
     deviceSearch.setUuid(Settings.uuid());
     deviceSearch.setKeyword(Settings.keyword());
     deviceSearch.start();
 
     QObject::connect(&settingsWidget, &SettingsWidget::findDevices, &deviceSearch, &BroadcastDeviceSearch::search);
     QObject::connect(&deviceSearch, &BroadcastDeviceSearch::deviceFound, &devConnectManager, &DeviceConnectManager::handleDeviceFound);
-    QObject::connect(&devConnectManager, &DeviceConnectManager::deviceChanged, &settingsWidget, &SettingsWidget::onDeviceChanged);
+    QObject::connect(&deviceSearch, &BroadcastDeviceSearch::deviceFound, &Settings, &SettingsFacade::setDevice);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::deviceConnectionChanged, &settingsWidget, &SettingsWidget::onDeviceConnectionChanged);
     QObject::connect(&settingsWidget, &SettingsWidget::removeDevice, &devConnectManager, &DeviceConnectManager::handleRemoveDevice);
-    QObject::connect(&settingsWidget, &SettingsWidget::screenPositionChanged, &devConnectManager, &DeviceConnectManager::handleScreenPositionChanged);
 
     cursorCheckerThread.start();
     devConnectManagerThread.start();

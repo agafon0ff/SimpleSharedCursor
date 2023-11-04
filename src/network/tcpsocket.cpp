@@ -45,6 +45,11 @@ void TcpSocket::setKeyword(const QString &keyword)
     sslWraper.setKey(keyword.toLocal8Bit());
 }
 
+bool TcpSocket::isConnected() const
+{
+    return _isConnected;
+}
+
 void TcpSocket::setUuid(const QUuid &_uuid)
 {
     uuid = _uuid;
@@ -72,7 +77,7 @@ void TcpSocket::stop()
 {
     qDebug() << Q_FUNC_INFO;
 
-    isConnected = false;
+    _isConnected = false;
 
     if (state() == QTcpSocket::ConnectedState)
         disconnectFromHost();
@@ -98,18 +103,18 @@ void TcpSocket::onReadyRead()
 
     messageType = jsonIn.value(KEY_TYPE).toString();
 
-    if (isConnected) {
+    if (_isConnected) {
         emit message(jsonIn);
     }
     else {
         jsonIn.insert(KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
 
         if (messageType == KEY_CONNECT_REQUEST) {
-            isConnected = true;
+            _isConnected = true;
             onConnectRequestReceived();
         }
         else if (messageType == KEY_CONNECT_RESPONSE) {
-            isConnected = true;
+            _isConnected = true;
             emit deviceConnected(this, jsonIn);
         }
     }
@@ -125,7 +130,7 @@ void TcpSocket::onConnected()
 
 void TcpSocket::onDisconnected()
 {
-    isConnected = false;
+    _isConnected = false;
     emit deviceDisconnected(this);
 }
 

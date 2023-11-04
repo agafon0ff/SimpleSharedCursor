@@ -14,6 +14,8 @@ public:
     void setUuid(const QUuid &uuid);
     QUuid uuid() const;
 
+    QPoint position();
+
     void setRects(const QVector<QRect> &rects);
     QVector<QRect> rects() const;
 

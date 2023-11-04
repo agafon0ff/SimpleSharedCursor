@@ -28,6 +28,8 @@ public:
 
     void setKeyword(const QString &keyword);
 
+    bool isConnected() const;
+
     friend bool operator==(const QUuid& uuid, const TcpSocket& socket) {
         return uuid == socket.uuid;
     }
@@ -51,7 +53,7 @@ private:
     QUuid uuid;
     QHostAddress host;
     quint16 port = DEFAULT_TCP_PORT;
-    bool isConnected = false;
+    bool _isConnected = false;
     QByteArray dataIn, dataInDec;
     QByteArray dataOut, dataOutEnc;
     QJsonObject jsonIn, jsonOut;

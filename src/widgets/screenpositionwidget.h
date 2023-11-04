@@ -9,6 +9,7 @@ class ScreenPositionWidget : public QGraphicsView
     Q_OBJECT
 public:
     explicit ScreenPositionWidget(QWidget *parent = nullptr);
+    ~ScreenPositionWidget();
 
     QVector<ScreenRectItem*> screenRectItems() const;
 

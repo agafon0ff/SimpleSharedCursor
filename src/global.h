@@ -8,6 +8,7 @@
 #include <QRect>
 
 inline const char* CONFIG_PATH = "config.json";
+inline const char* GEOMETRY_PATH = "geometry.json";
 inline const char* PROGRAM_NAME = "ShareCursor";
 
 inline const char* KEY_SEARCH_REQUEST = "searchRequest";
@@ -17,6 +18,8 @@ inline const char* KEY_CONNECT_RESPONSE = "connectResponse";
 inline const char* KEY_GEOMETRY = "geometry";
 inline const char* KEY_SPLITTER = "splitter";
 inline const char* KEY_KEYWORD = "keyword";
+inline const char* KEY_PORT_UDP = "portUdp";
+inline const char* KEY_PORT_TCP = "portTcp";
 inline const char* KEY_NAME = "name";
 inline const char* KEY_UUID = "uuid";
 inline const char* KEY_ALL = "all";

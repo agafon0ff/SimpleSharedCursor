@@ -14,6 +14,15 @@ ScreenPositionWidget::ScreenPositionWidget(QWidget *parent)
     setScene(&graphicsScene);
 }
 
+ScreenPositionWidget::~ScreenPositionWidget()
+{
+    for (ScreenRectItem *item: qAsConst(items)) {
+        item->disconnect();
+        item->deleteLater();
+    }
+    items.clear();
+}
+
 QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
 {
     return items;

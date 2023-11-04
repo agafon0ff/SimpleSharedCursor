@@ -17,61 +17,65 @@ DeviceConnectManager::~DeviceConnectManager()
     devices.clear();
 }
 
-void DeviceConnectManager::setUuid(const QUuid &_uuid)
+void DeviceConnectManager::setPort(quint16 port)
 {
-    qDebug() << Q_FUNC_INFO << _uuid.toString();
-    uuid = _uuid;
+    _port = port;
 }
 
-void DeviceConnectManager::setKeyword(const QString &_keyword)
+void DeviceConnectManager::setUuid(const QUuid &uuid)
+{
+    qDebug() << Q_FUNC_INFO << uuid.toString();
+    _uuid = uuid;
+}
+
+void DeviceConnectManager::setKeyword(const QString &keyword)
 {
     qDebug() << Q_FUNC_INFO;
-    keyword = _keyword;
+    _keyword = keyword;
 
     auto i = devices.constBegin();
     while (i != devices.constEnd()) {
-        i.value().socket->setKeyword(keyword);
+        i.value()->setKeyword(_keyword);
         ++i;
     }
 }
 
-void DeviceConnectManager::saveDevices()
-{
-    qDebug() << Q_FUNC_INFO;
+//void DeviceConnectManager::saveDevices()
+//{
+//    qDebug() << Q_FUNC_INFO;
 
-    QJsonObject jsonDevices;
-    auto i = devices.constBegin();
-    while (i != devices.constEnd()) {
-        auto &device = i.value().device;
-        jsonDevices.insert(device->uuid.toString(), devicePtrToJsonObject(device));
-        ++i;
-    }
+//    QJsonObject jsonDevices;
+//    auto i = devices.constBegin();
+//    while (i != devices.constEnd()) {
+//        auto &device = i.value().device;
+//        jsonDevices.insert(device->uuid.toString(), devicePtrToJsonObject(device));
+//        ++i;
+//    }
 
-    Settings.setValue(KEY_DEVICES, jsonDevices);
-}
+//    Settings.setValue(KEY_DEVICES, jsonDevices);
+//}
 
-void DeviceConnectManager::loadDevices()
-{
-    qDebug() << Q_FUNC_INFO;
+//void DeviceConnectManager::loadDevices()
+//{
+//    qDebug() << Q_FUNC_INFO;
 
-    const QJsonObject &jsonDevices = Settings.value(KEY_DEVICES).toObject();
-    for (auto it=jsonDevices.constBegin(); it != jsonDevices.constEnd(); ++it) {
-        QSharedPointer<Device> device = jsonObjectToDevicePtr(it.value().toObject());
-        devices.insert(device->uuid, { device, QSharedPointer<TcpSocket>()});
-        emit deviceChanged(device);
-        connectToDevice(device);
-    }
-}
+//    const QJsonObject &jsonDevices = Settings.value(KEY_DEVICES).toObject();
+//    for (auto it=jsonDevices.constBegin(); it != jsonDevices.constEnd(); ++it) {
+//        QSharedPointer<Device> device = jsonObjectToDevicePtr(it.value().toObject());
+//        devices.insert(device->uuid, { device, QSharedPointer<TcpSocket>()});
+//        emit deviceChanged(device);
+//        connectToDevice(device);
+//    }
+//}
 
 void DeviceConnectManager::start()
 {
     qDebug() << Q_FUNC_INFO;
 
     devices.clear();
-    loadDevices();
 
     server = QSharedPointer<TcpServer>(new TcpServer);
-    server->setPort(port);
+    server->setPort(_port);
     server->start();
 
     connect(server.get(), &TcpServer::newSocketConnected, this, &DeviceConnectManager::onSocketConnected);
@@ -100,10 +104,8 @@ void DeviceConnectManager::handleDeviceFound(const QJsonObject &obj)
     if (devices.contains(uuid))
         return;
 
-    QSharedPointer<Device> device = jsonObjectToDevicePtr(obj);
-    saveDevices();
-    connectToDevice(device);
-    emit deviceChanged(device);
+    connectToDevice(QUuid::fromString(obj.value(KEY_UUID).toString()),
+                    obj.value(KEY_HOST).toString());
 }
 
 void DeviceConnectManager::handleRemoveDevice(const QUuid &uuid)
@@ -113,7 +115,6 @@ void DeviceConnectManager::handleRemoveDevice(const QUuid &uuid)
         return;
 
     devices.remove(uuid);
-    saveDevices();
 }
 
 void DeviceConnectManager::handleDeviceConnected(TcpSocket *socket, const QJsonObject &obj)
@@ -126,20 +127,14 @@ void DeviceConnectManager::handleDeviceConnected(TcpSocket *socket, const QJsonO
     if (socketPtr.isNull())
         return;
 
-    QSharedPointer<Device> device;
-
     if (devices.contains(uuid)) {
-        devices[uuid].socket.swap(socketPtr);
-        device = devices[uuid].device;
+        devices[uuid].swap(socketPtr);
     }
     else {
-        device = jsonObjectToDevicePtr(obj);
-        devices.insert(uuid, { device, socketPtr } );
+        devices.insert(uuid, socketPtr);
     }
 
-    device->state = Device::Connected;
-    saveDevices();
-    emit deviceChanged(device);
+    emit deviceConnectionChanged(uuid, Device::Connected);
 }
 
 void DeviceConnectManager::handleDeviceDisconnected(TcpSocket *socket)
@@ -152,29 +147,16 @@ void DeviceConnectManager::handleDeviceDisconnected(TcpSocket *socket)
     qDebug() << Q_FUNC_INFO << uuid;
 
     if (devices.contains(uuid)) {
-        QSharedPointer<TcpSocket> socket = devices.value(uuid).socket;
+        QSharedPointer<TcpSocket> socket = devices.value(uuid);
         disconnect(socket.get(), &TcpSocket::deviceConnected, this, &DeviceConnectManager::handleDeviceConnected);
         disconnect(socket.get(), &TcpSocket::deviceDisconnected, this, &DeviceConnectManager::handleDeviceDisconnected);
 
-        QSharedPointer<Device> device = devices.value(uuid).device;
-        device->state = Device::Disconnected;
-        emit deviceChanged(device);
-        devices[uuid].socket.clear();
+        emit deviceConnectionChanged(uuid, Device::Disconnected);
+        devices[uuid].clear();
     }
     else {
         popTempSocket(socket);
     }
-}
-
-void DeviceConnectManager::handleScreenPositionChanged(const QUuid &uuid, const QPoint &pos)
-{
-    qDebug() << Q_FUNC_INFO;
-    if (!devices.contains(uuid))
-        return;
-
-    QSharedPointer<Device> device = devices.value(uuid).device;
-    device->position = pos;
-    saveDevices();
 }
 
 void DeviceConnectManager::onSocketConnected(qintptr socketDescriptor)
@@ -184,23 +166,30 @@ void DeviceConnectManager::onSocketConnected(qintptr socketDescriptor)
     socket->setType(TcpSocket::Type::ServerOwned);
 }
 
-void DeviceConnectManager::connectToDevice(QSharedPointer<Device> device)
+void DeviceConnectManager::connectToDevice(const QUuid &uuid, const QString &host)
 {
-    if (device.isNull() || device->self || device->state == Device::Connected)
+    if (uuid.isNull() || uuid == _uuid)
         return;
+
+    if (devices.contains(uuid)) {
+        QSharedPointer<TcpSocket> socket = devices.value(uuid);
+        if(!socket.isNull() && socket->isConnected()) {
+            return;
+        }
+    }
 
     QSharedPointer<TcpSocket> socket = createTempSocket();
     socket->setType(TcpSocket::Type::Independent);
-    socket->setUuid(device->uuid);
-    socket->setHost(device->host);
-    socket->setPort(port);
+    socket->setUuid(uuid);
+    socket->setHost(QHostAddress(host));
+    socket->setPort(_port);
     socket->start();
 
-    device->state = Device::Waiting;
-
-    if (devices.contains(device->uuid)) {
-        devices[device->uuid].socket.clear();
+    if (devices.contains(uuid)) {
+        devices[uuid].clear();
     }
+
+    emit deviceConnectionChanged(uuid, Device::Waiting);
 }
 
 QJsonObject DeviceConnectManager::devicePtrToJsonObject(QSharedPointer<Device> device)
@@ -220,7 +209,7 @@ QSharedPointer<Device> DeviceConnectManager::jsonObjectToDevicePtr(const QJsonOb
     device->uuid = QUuid::fromString(obj.value(KEY_UUID).toString());
     device->name = obj.value(KEY_NAME).toString();
     device->host = QHostAddress(obj.value(KEY_HOST).toString());
-    device->self = device->uuid == uuid;
+    device->self = device->uuid == _uuid;
     device->screens = Utils::jsonValueToRectList(obj.value(KEY_SCREENS));
     return device;
 }
@@ -228,7 +217,7 @@ QSharedPointer<Device> DeviceConnectManager::jsonObjectToDevicePtr(const QJsonOb
 QSharedPointer<TcpSocket> DeviceConnectManager::createTempSocket()
 {
     QSharedPointer<TcpSocket> socket = QSharedPointer<TcpSocket>(new TcpSocket);
-    socket->setKeyword(keyword);
+    socket->setKeyword(_keyword);
     tempSockets.append(socket);
 
     connect(socket.get(), &TcpSocket::deviceConnected, this, &DeviceConnectManager::handleDeviceConnected, Qt::QueuedConnection);

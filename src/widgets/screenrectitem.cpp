@@ -17,6 +17,11 @@ QUuid ScreenRectItem::uuid() const
     return _uuid;
 }
 
+QPoint ScreenRectItem::position()
+{
+    return QPoint(x(), y());
+}
+
 void ScreenRectItem::setRects(const QVector<QRect> &rects)
 {
     _rects = rects;

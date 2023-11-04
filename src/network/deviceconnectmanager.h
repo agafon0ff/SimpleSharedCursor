@@ -14,11 +14,12 @@ public:
     explicit DeviceConnectManager(QObject *parent = nullptr);
     ~DeviceConnectManager();
 
-    void setUuid(const QUuid &_uuid);
-    void setKeyword(const QString &_keyword);
+    void setPort(quint16 port);
+    void setUuid(const QUuid &uuid);
+    void setKeyword(const QString &keyword);
 
-    void saveDevices();
-    void loadDevices();
+//    void saveDevices();
+//    void loadDevices();
 
 public slots:
     void start();
@@ -28,30 +29,25 @@ public slots:
     void handleRemoveDevice(const QUuid &uuid);
     void handleDeviceConnected(TcpSocket* socket, const QJsonObject &obj);
     void handleDeviceDisconnected(TcpSocket* socket);
-    void handleScreenPositionChanged(const QUuid &uuid, const QPoint &pos);
 
 signals:
     void started();
     void finished();
-    void deviceChanged(QSharedPointer<Device> device);
+
+    void deviceConnectionChanged(const QUuid &uuid, Device::ConnectionState state);
 
 private slots:
     void onSocketConnected(qintptr socketDescriptor);
 
 private:
-    struct DevicePair {
-        QSharedPointer<Device> device;
-        QSharedPointer<TcpSocket> socket;
-    };
-
-    QUuid uuid;
-    QString keyword;
-    quint16 port = DEFAULT_TCP_PORT;
-    QMap<QUuid, DevicePair> devices;
+    QUuid _uuid;
+    QString _keyword;
+    quint16 _port = DEFAULT_TCP_PORT;
+    QMap<QUuid, QSharedPointer<TcpSocket>> devices;
     QVector<QSharedPointer<TcpSocket>> tempSockets;
     QSharedPointer<TcpServer> server;
 
-    void connectToDevice(QSharedPointer<Device> device);
+    void connectToDevice(const QUuid &uuid, const QString &host);
     QJsonObject devicePtrToJsonObject(QSharedPointer<Device> device);
     QSharedPointer<Device> jsonObjectToDevicePtr(const QJsonObject &obj);
     QSharedPointer<TcpSocket> createTempSocket();

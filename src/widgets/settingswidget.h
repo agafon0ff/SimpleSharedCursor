@@ -7,6 +7,7 @@
 
 #include "screenpositionwidget.h"
 #include "deviceitemwidget.h"
+#include "jsonloader.h"
 #include "global.h"
 
 QT_BEGIN_NAMESPACE
@@ -24,7 +25,7 @@ public:
     void initialize();
 
 public slots:
-    void onDeviceChanged(QSharedPointer<Device> device);
+    void onDeviceConnectionChanged(const QUuid &uuid, Device::ConnectionState state);
 
 signals:
     void findDevices();
@@ -36,9 +37,9 @@ private:
     ScreenPositionWidget *positioningWidget = nullptr;
     QMap<QUuid, DeviceItemWidget*> deviceWidgets;
     QMap<QUuid, QListWidgetItem*> listIitemWidgets;
+    JsonLoader geometryLoader;
 
     void createFoundDeviceWidget(QSharedPointer<Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);
-    void onScreenPositionChanged(const QUuid &uuid, const QPoint &pos);
     void onBtnOkClicked();
 };
