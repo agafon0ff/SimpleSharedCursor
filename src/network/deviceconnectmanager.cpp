@@ -1,7 +1,7 @@
 #include <QJsonArray>
 
 #include "deviceconnectmanager.h"
-#include "settingsloader.h"
+#include "settingsfacade.h"
 #include "utils.h"
 
 DeviceConnectManager::DeviceConnectManager(QObject *parent)
@@ -15,6 +15,24 @@ DeviceConnectManager::~DeviceConnectManager()
     qDebug() << Q_FUNC_INFO;
     tempSockets.clear();
     devices.clear();
+}
+
+void DeviceConnectManager::setUuid(const QUuid &_uuid)
+{
+    qDebug() << Q_FUNC_INFO << _uuid.toString();
+    uuid = _uuid;
+}
+
+void DeviceConnectManager::setKeyword(const QString &_keyword)
+{
+    qDebug() << Q_FUNC_INFO;
+    keyword = _keyword;
+
+    auto i = devices.constBegin();
+    while (i != devices.constEnd()) {
+        i.value().socket->setKeyword(keyword);
+        ++i;
+    }
 }
 
 void DeviceConnectManager::saveDevices()
@@ -193,7 +211,6 @@ QJsonObject DeviceConnectManager::devicePtrToJsonObject(QSharedPointer<Device> d
     result.insert(KEY_HOST, QHostAddress(device->host.toIPv4Address()).toString());
     result.insert(KEY_SELF, device->self);
     result.insert(KEY_SCREENS, Utils::rectListToJsonValue(device->screens));
-    result.insert(KEY_POSITION, Utils::pointToJsonValue(device->position));
     return result;
 }
 
@@ -203,15 +220,15 @@ QSharedPointer<Device> DeviceConnectManager::jsonObjectToDevicePtr(const QJsonOb
     device->uuid = QUuid::fromString(obj.value(KEY_UUID).toString());
     device->name = obj.value(KEY_NAME).toString();
     device->host = QHostAddress(obj.value(KEY_HOST).toString());
-    device->self = device->uuid.toString() == Settings.value(KEY_UUID).toString();
+    device->self = device->uuid == uuid;
     device->screens = Utils::jsonValueToRectList(obj.value(KEY_SCREENS));
-    device->position = Utils::jsonValueToPoint(obj.value(KEY_POSITION));
     return device;
 }
 
 QSharedPointer<TcpSocket> DeviceConnectManager::createTempSocket()
 {
     QSharedPointer<TcpSocket> socket = QSharedPointer<TcpSocket>(new TcpSocket);
+    socket->setKeyword(keyword);
     tempSockets.append(socket);
 
     connect(socket.get(), &TcpSocket::deviceConnected, this, &DeviceConnectManager::handleDeviceConnected, Qt::QueuedConnection);

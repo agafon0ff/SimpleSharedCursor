@@ -26,6 +26,8 @@ public:
     bool isUuidEqual(const QUuid &uuid) const;
     QUuid getUuid() const;
 
+    void setKeyword(const QString &keyword);
+
     friend bool operator==(const QUuid& uuid, const TcpSocket& socket) {
         return uuid == socket.uuid;
     }

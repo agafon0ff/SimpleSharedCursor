@@ -5,7 +5,7 @@
 #include "ui_settingswidget.h"
 
 #include "settingswidget.h"
-#include "settingsloader.h"
+#include "settingsfacade.h"
 #include "utils.h"
 
 SettingsWidget::SettingsWidget(QWidget *parent)
@@ -16,6 +16,7 @@ SettingsWidget::SettingsWidget(QWidget *parent)
     initialize();
 
     connect(ui->btnFindDevices, &QPushButton::clicked, this, &SettingsWidget::findDevices);
+    connect(ui->btnOk, &QPushButton::clicked, this, &SettingsWidget::onBtnOkClicked);
 }
 
 SettingsWidget::~SettingsWidget()
@@ -101,6 +102,11 @@ void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
 }
 
 void SettingsWidget::onScreenPositionChanged(const QUuid &uuid, const QPoint &pos)
+{
+
+}
+
+void SettingsWidget::onBtnOkClicked()
 {
 
 }

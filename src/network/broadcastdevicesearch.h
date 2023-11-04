@@ -3,6 +3,7 @@
 #include <QSharedPointer>
 #include <QJsonObject>
 #include <QUdpSocket>
+#include <QUuid>
 
 #include "opensslwrapper.h"
 #include "global.h"
@@ -19,12 +20,15 @@ public slots:
     void stop();
     void search();
     void setPort(quint16 port);
+    void setUuid(const QUuid &_uuid);
+    void setKeyword(const QString &keyword);
 
 signals:
     void deviceFound(const QJsonObject& jObject);
 
 private:
     quint16 port = DEFAULT_UDP_PORT;
+    QString uuid;
     QUdpSocket udpSocket;
     OpenSslWrapper sslWraper;
     QByteArray datagram, datagramEnc;

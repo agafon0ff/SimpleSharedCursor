@@ -14,6 +14,9 @@ public:
     explicit DeviceConnectManager(QObject *parent = nullptr);
     ~DeviceConnectManager();
 
+    void setUuid(const QUuid &_uuid);
+    void setKeyword(const QString &_keyword);
+
     void saveDevices();
     void loadDevices();
 
@@ -41,6 +44,8 @@ private:
         QSharedPointer<TcpSocket> socket;
     };
 
+    QUuid uuid;
+    QString keyword;
     quint16 port = DEFAULT_TCP_PORT;
     QMap<QUuid, DevicePair> devices;
     QVector<QSharedPointer<TcpSocket>> tempSockets;
