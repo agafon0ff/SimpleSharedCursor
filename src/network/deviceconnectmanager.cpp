@@ -40,34 +40,6 @@ void DeviceConnectManager::setKeyword(const QString &keyword)
     }
 }
 
-//void DeviceConnectManager::saveDevices()
-//{
-//    qDebug() << Q_FUNC_INFO;
-
-//    QJsonObject jsonDevices;
-//    auto i = devices.constBegin();
-//    while (i != devices.constEnd()) {
-//        auto &device = i.value().device;
-//        jsonDevices.insert(device->uuid.toString(), devicePtrToJsonObject(device));
-//        ++i;
-//    }
-
-//    Settings.setValue(KEY_DEVICES, jsonDevices);
-//}
-
-//void DeviceConnectManager::loadDevices()
-//{
-//    qDebug() << Q_FUNC_INFO;
-
-//    const QJsonObject &jsonDevices = Settings.value(KEY_DEVICES).toObject();
-//    for (auto it=jsonDevices.constBegin(); it != jsonDevices.constEnd(); ++it) {
-//        QSharedPointer<Device> device = jsonObjectToDevicePtr(it.value().toObject());
-//        devices.insert(device->uuid, { device, QSharedPointer<TcpSocket>()});
-//        emit deviceChanged(device);
-//        connectToDevice(device);
-//    }
-//}
-
 void DeviceConnectManager::start()
 {
     qDebug() << Q_FUNC_INFO;

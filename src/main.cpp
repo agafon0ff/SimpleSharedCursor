@@ -3,6 +3,7 @@
 #include "settingswidget.h"
 #include "settingsfacade.h"
 #include "cursorhandler.h"
+#include "traymenu.h"
 #include "global.h"
 
 #include <QApplication>
@@ -66,6 +67,8 @@ int main(int argc, char *argv[])
 
     cursorCheckerThread.start();
     devConnectManagerThread.start();
+
+    TrayMenu trayMenu;
 
     int result = a.exec();
 

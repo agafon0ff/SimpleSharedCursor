@@ -18,9 +18,6 @@ public:
     void setUuid(const QUuid &uuid);
     void setKeyword(const QString &keyword);
 
-//    void saveDevices();
-//    void loadDevices();
-
 public slots:
     void start();
     void stop();

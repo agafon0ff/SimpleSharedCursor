@@ -20,7 +20,8 @@ SOURCES += \
     src/widgets/deviceitemwidget.cpp \
     src/widgets/screenpositionwidget.cpp \
     src/widgets/screenrectitem.cpp \
-    src/widgets/settingswidget.cpp
+    src/widgets/settingswidget.cpp \
+    src/widgets/traymenu.cpp
 
 HEADERS += \
     src/cursorhandler.h \
@@ -36,11 +37,15 @@ HEADERS += \
     src/widgets/deviceitemwidget.h \
     src/widgets/screenpositionwidget.h \
     src/widgets/screenrectitem.h \
-    src/widgets/settingswidget.h
+    src/widgets/settingswidget.h \
+    src/widgets/traymenu.h
 
 FORMS += \
     src/widgets/deviceitemwidget.ui \
     src/widgets/settingswidget.ui
+
+RESOURCES += \
+    resources.qrc
 
 TRANSLATIONS += \
     tr/ShareCursor_en.ts
@@ -49,3 +54,4 @@ CONFIG += lrelease
 CONFIG += embed_translations
 
 LIBS += -lcrypto
+
