@@ -42,4 +42,6 @@ private:
     void createFoundDeviceWidget(QSharedPointer<Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);
     void onBtnOkClicked();
+
+    void closeEvent(QCloseEvent *e) override;
 };

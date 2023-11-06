@@ -51,7 +51,8 @@ int main(int argc, char *argv[])
     devConnectManager.moveToThread(&devConnectManagerThread);
 
     SettingsWidget settingsWidget;
-    settingsWidget.show();
+    TrayMenu trayMenu;
+    QObject::connect(&trayMenu, &TrayMenu::settingsActionTriggered, &settingsWidget, &SettingsWidget::show);
 
     BroadcastDeviceSearch deviceSearch;
     deviceSearch.setPort(Settings.portUdp());
@@ -67,8 +68,6 @@ int main(int argc, char *argv[])
 
     cursorCheckerThread.start();
     devConnectManagerThread.start();
-
-    TrayMenu trayMenu;
 
     int result = a.exec();
 

@@ -1,4 +1,5 @@
 #include <QMessageBox>
+#include <QCloseEvent>
 #include <QHostInfo>
 #include <QMap>
 
@@ -113,10 +114,21 @@ void SettingsWidget::onBtnOkClicked()
     Settings.setValue(KEY_NAME, ui->lineDeviceName->text());
     Settings.setKeyword(ui->lineEditKeyword->text());
 
+
+
     const QVector<ScreenRectItem*> &items = positioningWidget->screenRectItems();
     for (ScreenRectItem* item: items) {
         Settings.setDevicePosition(item->uuid(), item->position());
+
+
+
     }
 
     Settings.save();
+}
+
+void SettingsWidget::closeEvent(QCloseEvent *e)
+{
+    e->ignore();
+    hide();
 }

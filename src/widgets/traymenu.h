@@ -14,5 +14,5 @@ public:
     QMenu trayMenu;
 
 signals:
-
+    void settingsActionTriggered();
 };

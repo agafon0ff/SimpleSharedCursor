@@ -55,9 +55,4 @@ struct Device
     } state = Disconnected;
 };
 
-struct Intersection {
-    QLine line;
-    QUuid uuid;
-};
-
 inline bool operator==(const Device &d1, const Device &d2) { return d1.uuid == d2.uuid; }
