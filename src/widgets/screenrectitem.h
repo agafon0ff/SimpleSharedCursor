@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QPair>
 #include <QUuid>
+#include "global.h"
 
 class ScreenRectItem : public QGraphicsObject
 {
@@ -28,10 +29,10 @@ public:
     void setBackgroundColor(const QColor &color);
     void setText(const QString &text);
 
-    void calculateIntersection(const QUuid &uuid, const QRect& rect);
-    void clearIntersections();
+    void calculateTransits(const QUuid &uuid, const QRect& rect);
+    void clearTransits();
 
-    QVector<QPair<QLine, QUuid>> intersects() const;
+    QVector<Transit> transits() const;
 
 signals:
     void movementHasStarted(ScreenRectItem *self);
@@ -42,7 +43,7 @@ private:
     QString _text;
     QSizeF _size {100., 100.};
     QVector<QRect> _rects;
-    QVector<QPair<QLine, QUuid>> _intersects;
+    QVector<Transit> _transits;
     bool isPositionChanged = false;
     QColor backgroundColor {160, 160, 160};
 

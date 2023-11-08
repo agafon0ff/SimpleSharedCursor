@@ -114,28 +114,28 @@ bool intersectBottom(const QRect &from, const QRect &to, QLine &result)
     return intersect.width() > 0;
 }
 
-void ScreenRectItem::calculateIntersection(const QUuid &uuid, const QRect &rect)
+void ScreenRectItem::calculateTransits(const QUuid &uuid, const QRect &rect)
 {
     QLine line;
     QRect adjusted = rect.adjusted(-x(), -y(), -x(), -y());
 
     for (const QRect &r: qAsConst(_rects)) {
-        if (intersectRight(r, adjusted, line)) _intersects.append({line, uuid});
-        if (intersectLeft(r, adjusted, line)) _intersects.append({line, uuid});
-        if (intersectTop(r, adjusted, line)) _intersects.append({line, uuid});
-        if (intersectBottom(r, adjusted, line)) _intersects.append({line, uuid});
+        if (intersectRight(r, adjusted, line)) _transits.append({line, uuid});
+        if (intersectLeft(r, adjusted, line)) _transits.append({line, uuid});
+        if (intersectTop(r, adjusted, line)) _transits.append({line, uuid});
+        if (intersectBottom(r, adjusted, line)) _transits.append({line, uuid});
     }
 }
 
-void ScreenRectItem::clearIntersections()
+void ScreenRectItem::clearTransits()
 {
-    _intersects.clear();
+    _transits.clear();
     update();
 }
 
-QVector<QPair<QLine, QUuid> > ScreenRectItem::intersects() const
+QVector<Transit> ScreenRectItem::transits() const
 {
-    return _intersects;
+    return _transits;
 }
 
 QRectF ScreenRectItem::boundingRect() const
@@ -174,8 +174,8 @@ void ScreenRectItem::paint(QPainter *p, const QStyleOptionGraphicsItem *item, QW
 
     p->setPen(QPen(QBrush(QColor(255, 0, 0)), penWidth));
 
-    for (const auto &line: qAsConst(_intersects)) {
-        p->drawLine(line.first);
+    for (const auto &transit: qAsConst(_transits)) {
+        p->drawLine(transit.line);
     }
 }
 

@@ -23,6 +23,7 @@ public:
     ~SettingsWidget();
 
     void initialize();
+    void clearWidget();
 
 public slots:
     void onDeviceConnectionChanged(const QUuid &uuid, Device::ConnectionState state);
@@ -43,5 +44,6 @@ private:
     void removeDeviceFromListWidget(const QUuid &uuid);
     void onBtnOkClicked();
 
+    void showEvent(QShowEvent *e) override;
     void closeEvent(QCloseEvent *e) override;
 };

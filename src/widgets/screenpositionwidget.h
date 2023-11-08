@@ -19,6 +19,7 @@ signals:
 public slots:
     void addDevice(QSharedPointer<Device> device);
     void removeDevice(const QUuid &uuid);
+    void clearWidget();
 
 private slots:
     void calculateSceneRect();

@@ -115,6 +115,14 @@ void SettingsFacade::setDevicePosition(const QUuid &uuid, const QPoint &pos)
     _devices.value(uuid)->position = pos;
 }
 
+void SettingsFacade::setTransitsToDevice(const QUuid &uuid, const QVector<Transit> &transits)
+{
+    if (!_devices.contains(uuid))
+        return;
+
+    _devices.value(uuid)->transits = transits;
+}
+
 void SettingsFacade::setValue(const char *key, const QJsonValue &value)
 {
     loader.setValue(key, value);
@@ -178,6 +186,7 @@ void SettingsFacade::saveSelfDevice()
 void SettingsFacade::loadFacadeProperties()
 {
     _uuid = QUuid::fromString(loader.value(KEY_UUID).toString());
+    _name = loader.value(KEY_NAME, QHostInfo::localHostName()).toString();
     _keyword = loader.value(KEY_KEYWORD, QHostInfo::localHostName()).toString();
     _portTcp = loader.value(KEY_PORT_TCP, DEFAULT_TCP_PORT).toInt();
     _portUdp = loader.value(KEY_PORT_UDP, DEFAULT_UDP_PORT).toInt();
@@ -186,6 +195,7 @@ void SettingsFacade::loadFacadeProperties()
 void SettingsFacade::saveFacadeProperties()
 {
     loader.setValue(KEY_UUID, _uuid.toString());
+    loader.setValue(KEY_NAME, _name);
     loader.setValue(KEY_KEYWORD, _keyword);
     loader.setValue(KEY_PORT_TCP, _portTcp);
     loader.setValue(KEY_PORT_UDP, _portUdp);
@@ -200,6 +210,7 @@ QJsonObject SettingsFacade::devicePtrToJsonObject(QSharedPointer<Device> device)
     result.insert(KEY_SELF, device->self);
     result.insert(KEY_SCREENS, Utils::rectListToJsonValue(device->screens));
     result.insert(KEY_POSITION, Utils::pointToJsonValue(device->position));
+    result.insert(KEY_TRANSITS, Utils::transitListToJsonValue(device->transits));
     return result;
 }
 
@@ -226,6 +237,10 @@ void SettingsFacade::fillDeviceProperties(QSharedPointer<Device> device, const Q
 
     if (obj.contains(KEY_POSITION)) {
         device->position = Utils::jsonValueToPoint(obj.value(KEY_POSITION));
+    }
+
+    if (obj.contains(KEY_TRANSITS)) {
+        device->transits = Utils::jsonValueToTransitList(obj.value(KEY_TRANSITS));
     }
 }
 

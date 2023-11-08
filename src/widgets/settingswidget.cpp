@@ -14,32 +14,30 @@ SettingsWidget::SettingsWidget(QWidget *parent)
     , ui(new Ui::SettingsWidget)
 {
     ui->setupUi(this);
-    initialize();
 
     connect(ui->btnFindDevices, &QPushButton::clicked, this, &SettingsWidget::findDevices);
     connect(ui->btnOk, &QPushButton::clicked, this, &SettingsWidget::onBtnOkClicked);
+
+    positioningWidget = new ScreenPositionWidget(this);
+    ui->positioningLayout->addWidget(positioningWidget, 0, 0);
 }
 
 SettingsWidget::~SettingsWidget()
 {
-    geometryLoader.setValue(KEY_GEOMETRY, QString::fromUtf8(saveGeometry().toBase64()));
-    geometryLoader.setValue(KEY_SPLITTER, QString::fromUtf8(ui->splitter->saveState().toBase64()));
-    geometryLoader.save(GEOMETRY_PATH);
+    clearWidget();
     delete ui;
 }
 
 void SettingsWidget::initialize()
 {
+    qDebug() << Q_FUNC_INFO;
+
     geometryLoader.load(GEOMETRY_PATH);
     restoreGeometry(QByteArray::fromBase64(geometryLoader.value(KEY_GEOMETRY).toString().toUtf8()));
     ui->splitter->restoreState(QByteArray::fromBase64(geometryLoader.value(KEY_SPLITTER).toString().toUtf8()));
 
-    const QString &deviceName = Settings.value(KEY_NAME, QHostInfo::localHostName()).toString();
-    ui->lineEditKeyword->setText(Settings.value(KEY_KEYWORD).toString());
-    ui->lineDeviceName->setText(deviceName);
-
-    positioningWidget = new ScreenPositionWidget(this);
-    ui->positioningLayout->addWidget(positioningWidget, 0, 0);
+    ui->lineEditKeyword->setText(Settings.keyword());
+    ui->lineDeviceName->setText(Settings.name());
 
     const QMap<QUuid, QSharedPointer<Device>> &devices = Settings.devices();
     auto i = devices.constBegin();
@@ -47,6 +45,34 @@ void SettingsWidget::initialize()
         createFoundDeviceWidget(i.value());
         ++i;
     }
+}
+
+void SettingsWidget::clearWidget()
+{
+    qDebug() << Q_FUNC_INFO;
+
+    auto itemTerator = listIitemWidgets.constBegin();
+    while (itemTerator != listIitemWidgets.constEnd()) {
+        delete itemTerator.value();
+        ++itemTerator;
+    }
+
+    auto deviceIterator = deviceWidgets.constBegin();
+    while (deviceIterator != deviceWidgets.constEnd()) {
+        deviceIterator.value()->disconnect();
+        delete deviceIterator.value();
+        ++deviceIterator;
+    }
+
+    ui->listWidgetDevices->clear();
+    listIitemWidgets.clear();
+    deviceWidgets.clear();
+
+    positioningWidget->clearWidget();
+
+    geometryLoader.setValue(KEY_GEOMETRY, QString::fromUtf8(saveGeometry().toBase64()));
+    geometryLoader.setValue(KEY_SPLITTER, QString::fromUtf8(ui->splitter->saveState().toBase64()));
+    geometryLoader.save(GEOMETRY_PATH);
 }
 
 void SettingsWidget::onDeviceConnectionChanged(const QUuid &uuid, Device::ConnectionState state)
@@ -114,21 +140,23 @@ void SettingsWidget::onBtnOkClicked()
     Settings.setValue(KEY_NAME, ui->lineDeviceName->text());
     Settings.setKeyword(ui->lineEditKeyword->text());
 
-
-
     const QVector<ScreenRectItem*> &items = positioningWidget->screenRectItems();
     for (ScreenRectItem* item: items) {
         Settings.setDevicePosition(item->uuid(), item->position());
-
-
-
+        Settings.setTransitsToDevice(item->uuid(), item->transits());
     }
 
     Settings.save();
+}
+
+void SettingsWidget::showEvent(QShowEvent *)
+{
+    initialize();
 }
 
 void SettingsWidget::closeEvent(QCloseEvent *e)
 {
     e->ignore();
     hide();
+    clearWidget();
 }

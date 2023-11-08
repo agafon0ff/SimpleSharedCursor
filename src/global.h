@@ -33,10 +33,17 @@ inline const char* KEY_STATE = "state";
 inline const char* KEY_APPROVED = "approved";
 inline const char* KEY_SCREENS = "screens";
 inline const char* KEY_POSITION = "position";
+inline const char* KEY_TRANSITS = "transits";
 
 inline const quint16 DEFAULT_TCP_PORT = 25786;
 inline const quint16 DEFAULT_UDP_PORT = 25787;
 inline const quint16 CONNECT_INTERVAL = 10000;
+
+struct Transit
+{
+    QLine line;
+    QUuid uuid;
+};
 
 struct Device
 {
@@ -46,6 +53,7 @@ struct Device
     bool self = false;
     QPoint position;
     QVector<QRect> screens;
+    QVector<Transit> transits;
 
     enum ConnectionState {
         Unknown = 0,

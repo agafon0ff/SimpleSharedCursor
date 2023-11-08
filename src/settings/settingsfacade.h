@@ -5,7 +5,6 @@
 
 #include "jsonloader.h"
 #include "global.h"
-#include <utility>
 
 class SettingsFacade : public QObject
 {
@@ -32,6 +31,7 @@ public slots:
     void setPortUdp(quint16 port);
     void setDevice(const QJsonObject &obj);
     void setDevicePosition(const QUuid &uuid, const QPoint &pos);
+    void setTransitsToDevice(const QUuid &uuid, const QVector<Transit> &transits);
 
     void setValue(const char *key, const QJsonValue &value);
     QJsonValue value(const char* key, const QJsonValue &defaultValue = QJsonValue());

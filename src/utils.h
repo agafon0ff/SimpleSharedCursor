@@ -72,6 +72,38 @@ inline QVector<QRect> jsonValueToRectList(const QJsonValue &jValue)
     return result;
 }
 
+inline QJsonValue transitListToJsonValue(const QVector<Transit> &list)
+{
+    QJsonArray result;
+    for (const Transit &transit: list) {
+        QJsonObject obj;
+        obj.insert("x1", transit.line.x1());
+        obj.insert("y1", transit.line.y1());
+        obj.insert("x2", transit.line.x2());
+        obj.insert("y2", transit.line.y2());
+        obj.insert("uuid", transit.uuid.toString());
+        result.append(obj);
+    }
+    return result;
+}
+
+inline QVector<Transit> jsonValueToTransitList(const QJsonValue &jValue)
+{
+    QVector<Transit> result;
+    QJsonArray arr = jValue.toArray();
+    for (const QJsonValue &value: arr) {
+        const QJsonObject &obj = value.toObject();
+        QLine line(obj.value("x1").toInt(),
+                   obj.value("y1").toInt(),
+                   obj.value("x2").toInt(),
+                   obj.value("y2").toInt());
+        QUuid uuid = QUuid::fromString(obj.value("uuid").toString());
+        result.append({line, uuid});
+    }
+
+    return result;
+}
+
 inline void fillDeviceJsonMessage(QJsonObject &jsonOut, const char* type)
 {
     jsonOut.insert(KEY_TYPE, type);

@@ -16,11 +16,7 @@ ScreenPositionWidget::ScreenPositionWidget(QWidget *parent)
 
 ScreenPositionWidget::~ScreenPositionWidget()
 {
-    for (ScreenRectItem *item: qAsConst(items)) {
-        item->disconnect();
-        item->deleteLater();
-    }
-    items.clear();
+    clearWidget();
 }
 
 QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
@@ -41,6 +37,7 @@ void ScreenPositionWidget::addDevice(QSharedPointer<Device> device)
     connect(item, &ScreenRectItem::movementHasStarted, this, &ScreenPositionWidget::clearIntersections);
     connect(item, &ScreenRectItem::movementHasFinished, this, &ScreenPositionWidget::onScreenPositionChanged);
 
+    clearIntersections();
     calculateSceneRect();
 }
 
@@ -58,6 +55,15 @@ void ScreenPositionWidget::removeDevice(const QUuid &uuid)
 
     clearIntersections();
     calculateSceneRect();
+}
+
+void ScreenPositionWidget::clearWidget()
+{
+    for (ScreenRectItem *item: qAsConst(items)) {
+        item->disconnect();
+        item->deleteLater();
+    }
+    items.clear();
 }
 
 void ScreenPositionWidget::calculateSceneRect()
@@ -100,7 +106,7 @@ void ScreenPositionWidget::calculateIntersections()
                                item->y() + rect.y(),
                                rect.width(), rect.height());
 
-                calcItem->calculateIntersection(item->uuid(), itemRect);
+                calcItem->calculateTransits(item->uuid(), itemRect);
             }
         }
     }
@@ -109,7 +115,7 @@ void ScreenPositionWidget::calculateIntersections()
 void ScreenPositionWidget::clearIntersections()
 {
     for (ScreenRectItem *calcItem: qAsConst(items))
-        calcItem->clearIntersections();
+        calcItem->clearTransits();
 }
 
 void ScreenPositionWidget::onScreenPositionChanged(ScreenRectItem *item)
