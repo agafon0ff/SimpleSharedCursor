@@ -26,12 +26,15 @@ public:
     void clearWidget();
 
 public slots:
-    void onDeviceConnectionChanged(const QUuid &uuid, Device::ConnectionState state);
+    void setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state);
 
 signals:
     void findDevices();
+    void nameChanged(const QString &name);
+    void keywordChanged(const QString &key);
     void removeDevice(const QUuid &uuid);
     void screenPositionChanged(const QUuid &uuid, const QPoint &pos);
+    void transitsChanged(const QMap<QUuid, QVector<ShareCursor::Transit>> &transits);
 
 private:
     Ui::SettingsWidget *ui;
@@ -40,7 +43,7 @@ private:
     QMap<QUuid, QListWidgetItem*> listIitemWidgets;
     JsonLoader geometryLoader;
 
-    void createFoundDeviceWidget(QSharedPointer<Device> device);
+    void createFoundDeviceWidget(QSharedPointer<ShareCursor::Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);
     void onBtnOkClicked();
 

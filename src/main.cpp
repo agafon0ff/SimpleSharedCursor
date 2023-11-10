@@ -19,8 +19,11 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    qRegisterMetaType<Device>("Device");
-    qRegisterMetaType<QSharedPointer<Device>>("QSharedPointer<Device>");
+    qRegisterMetaType<QHostAddress>("QHostAddress");
+    qRegisterMetaType<ShareCursor::Device>("ShareCursor::Device");
+    qRegisterMetaType<ShareCursor::ConnectionState>("ShareCursor::ConnectionState");
+    qRegisterMetaType<QSharedPointer<ShareCursor::Device>>("QSharedPointer<ShareCursor::Device>");
+    qRegisterMetaType<QMap<QUuid,QVector<ShareCursor::Transit>> >("QMap<QUuid,QVector<ShareCursor::Transit> >");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -33,6 +36,9 @@ int main(int argc, char *argv[])
     }
 
     QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount());
+
+
+    Settings.loadFacadeProperties();
 
     CursorHandler cursorHandler;
     QThread cursorCheckerThread;
@@ -61,13 +67,24 @@ int main(int argc, char *argv[])
     deviceSearch.start();
 
     QObject::connect(&settingsWidget, &SettingsWidget::findDevices, &deviceSearch, &BroadcastDeviceSearch::search);
-    QObject::connect(&deviceSearch, &BroadcastDeviceSearch::deviceFound, &devConnectManager, &DeviceConnectManager::handleDeviceFound);
+    QObject::connect(&settingsWidget, &SettingsWidget::keywordChanged, &deviceSearch, &BroadcastDeviceSearch::setKeyword);
     QObject::connect(&deviceSearch, &BroadcastDeviceSearch::deviceFound, &Settings, &SettingsFacade::setDevice);
-    QObject::connect(&devConnectManager, &DeviceConnectManager::deviceConnectionChanged, &settingsWidget, &SettingsWidget::onDeviceConnectionChanged);
+    QObject::connect(&Settings, &SettingsFacade::deviceFound, &devConnectManager, &DeviceConnectManager::connectToDevice);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::deviceConnectionChanged, &Settings, &SettingsFacade::setDeviceConnectionState);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::deviceConnectionChanged, &settingsWidget, &SettingsWidget::setDeviceConnectionState);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::deviceConnectionChanged, &cursorHandler, &CursorHandler::setConnectionState);
     QObject::connect(&settingsWidget, &SettingsWidget::removeDevice, &devConnectManager, &DeviceConnectManager::handleRemoveDevice);
+    QObject::connect(&settingsWidget, &SettingsWidget::keywordChanged, &devConnectManager, &DeviceConnectManager::setKeyword);
+    QObject::connect(&settingsWidget, &SettingsWidget::transitsChanged, &cursorHandler, &CursorHandler::setTransits);
 
     cursorCheckerThread.start();
     devConnectManagerThread.start();
+
+    Settings.loadDevices();
+    cursorHandler.setCurrentUuid(Settings.uuid());
+    cursorHandler.setTransits(Settings.transits());
+
+    settingsWidget.show();
 
     int result = a.exec();
 

@@ -18,12 +18,15 @@ public:
     quint16 portTcp() const;
     quint16 portUdp() const;
     QVector<QRect> screens();
-    QSharedPointer<Device> device(const QUuid &uuid) const;
-    QMap<QUuid, QSharedPointer<Device>> devices() const;
+    QSharedPointer<ShareCursor::Device> device(const QUuid &uuid) const;
+    QMap<QUuid, QSharedPointer<ShareCursor::Device>> devices() const;
+    QMap<QUuid, QVector<ShareCursor::Transit>> transits() const;
 
 public slots:
-    void load();
+
     void save();
+    void loadDevices();
+    void loadFacadeProperties();
 
     void setName(const QString &name);
     void setKeyword(const QString &keyword);
@@ -31,10 +34,15 @@ public slots:
     void setPortUdp(quint16 port);
     void setDevice(const QJsonObject &obj);
     void setDevicePosition(const QUuid &uuid, const QPoint &pos);
-    void setTransitsToDevice(const QUuid &uuid, const QVector<Transit> &transits);
+    void setTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits);
+    void setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state);
 
     void setValue(const char *key, const QJsonValue &value);
     QJsonValue value(const char* key, const QJsonValue &defaultValue = QJsonValue());
+
+signals:
+    void deviceFound(const QUuid &uuid, const QHostAddress &host);
+
 
 private:
     JsonLoader loader;
@@ -42,21 +50,17 @@ private:
     QUuid _uuid;
     QString _name;
     QString _keyword;
-    quint16 _portTcp = DEFAULT_TCP_PORT;
-    quint16 _portUdp = DEFAULT_UDP_PORT;
-    QMap<QUuid, QSharedPointer<Device>> _devices;
+    quint16 _portTcp = ShareCursor::DEFAULT_TCP_PORT;
+    quint16 _portUdp = ShareCursor::DEFAULT_UDP_PORT;
+    QMap<QUuid, QSharedPointer<ShareCursor::Device>> _devices;
 
-    void loadDevices();
     void saveDevices();
-
     void saveSelfDevice();
-
-    void loadFacadeProperties();
     void saveFacadeProperties();
 
-    QJsonObject devicePtrToJsonObject(QSharedPointer<Device> device);
-    QSharedPointer<Device> jsonObjectToDevicePtr(const QJsonObject &obj);
-    void fillDeviceProperties(QSharedPointer<Device> device, const QJsonObject &obj);
+    QJsonObject devicePtrToJsonObject(QSharedPointer<ShareCursor::Device> device);
+    QSharedPointer<ShareCursor::Device> jsonObjectToDevicePtr(const QJsonObject &obj);
+    void fillDeviceProperties(QSharedPointer<ShareCursor::Device> device, const QJsonObject &obj);
 
     SettingsFacade();
 

@@ -32,7 +32,7 @@ public:
     void calculateTransits(const QUuid &uuid, const QRect& rect);
     void clearTransits();
 
-    QVector<Transit> transits() const;
+    QVector<ShareCursor::Transit> transits() const;
 
 signals:
     void movementHasStarted(ScreenRectItem *self);
@@ -43,7 +43,7 @@ private:
     QString _text;
     QSizeF _size {100., 100.};
     QVector<QRect> _rects;
-    QVector<Transit> _transits;
+    QVector<ShareCursor::Transit> _transits;
     bool isPositionChanged = false;
     QColor backgroundColor {160, 160, 160};
 

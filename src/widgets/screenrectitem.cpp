@@ -133,7 +133,7 @@ void ScreenRectItem::clearTransits()
     update();
 }
 
-QVector<Transit> ScreenRectItem::transits() const
+QVector<ShareCursor::Transit> ScreenRectItem::transits() const
 {
     return _transits;
 }

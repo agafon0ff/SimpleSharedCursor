@@ -17,7 +17,7 @@ signals:
     void screenPositionChanged(const QUuid &uuid, const QPoint &pos);
 
 public slots:
-    void addDevice(QSharedPointer<Device> device);
+    void addDevice(QSharedPointer<ShareCursor::Device> device);
     void removeDevice(const QUuid &uuid);
     void clearWidget();
 

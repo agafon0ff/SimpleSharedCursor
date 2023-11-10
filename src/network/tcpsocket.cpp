@@ -99,21 +99,21 @@ void TcpSocket::onReadyRead()
     sslWraper.decrypt(dataIn, dataInDec);
 
     if (!Utils::convertArrayToJson(dataInDec, jsonIn)) return;
-    if (!jsonIn.contains(KEY_UUID)) return;
+    if (!jsonIn.contains(ShareCursor::KEY_UUID)) return;
 
-    messageType = jsonIn.value(KEY_TYPE).toString();
+    messageType = jsonIn.value(ShareCursor::KEY_TYPE).toString();
 
     if (_isConnected) {
         emit message(jsonIn);
     }
     else {
-        jsonIn.insert(KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
+        jsonIn.insert(ShareCursor::KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
 
-        if (messageType == KEY_CONNECT_REQUEST) {
+        if (messageType == ShareCursor::KEY_CONNECT_REQUEST) {
             _isConnected = true;
             onConnectRequestReceived();
         }
-        else if (messageType == KEY_CONNECT_RESPONSE) {
+        else if (messageType == ShareCursor::KEY_CONNECT_RESPONSE) {
             _isConnected = true;
             emit deviceConnected(this, jsonIn);
         }
@@ -122,7 +122,7 @@ void TcpSocket::onReadyRead()
 
 void TcpSocket::onConnected()
 {
-    Utils::fillDeviceJsonMessage(jsonOut, KEY_CONNECT_REQUEST);
+    Utils::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_REQUEST);
     Utils::convertJsonToArray(jsonOut, dataOut);
     sslWraper.encrypt(dataOut, dataOutEnc);
     write(dataOutEnc);
@@ -137,10 +137,10 @@ void TcpSocket::onDisconnected()
 void TcpSocket::onConnectRequestReceived()
 {
     if (uuid.isNull())
-        uuid = QUuid::fromString(jsonIn.value(KEY_UUID).toString());
+        uuid = QUuid::fromString(jsonIn.value(ShareCursor::KEY_UUID).toString());
 
     emit deviceConnected(this, jsonIn);
 
-    Utils::fillDeviceJsonMessage(jsonOut, KEY_CONNECT_RESPONSE);
+    Utils::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_RESPONSE);
     sendMessage(jsonOut);
 }

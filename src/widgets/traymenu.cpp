@@ -14,6 +14,6 @@ TrayMenu::TrayMenu(QObject *parent)
 
     trayIcon.setContextMenu(&trayMenu);
     trayIcon.setIcon(QIcon("://img/ShareCursor.ico"));
-    trayIcon.setToolTip(PROGRAM_NAME);
+    trayIcon.setToolTip(ShareCursor::PROGRAM_NAME);
     trayIcon.show();
 }

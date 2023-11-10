@@ -72,10 +72,10 @@ inline QVector<QRect> jsonValueToRectList(const QJsonValue &jValue)
     return result;
 }
 
-inline QJsonValue transitListToJsonValue(const QVector<Transit> &list)
+inline QJsonValue transitListToJsonValue(const QVector<ShareCursor::Transit> &list)
 {
     QJsonArray result;
-    for (const Transit &transit: list) {
+    for (const ShareCursor::Transit &transit: list) {
         QJsonObject obj;
         obj.insert("x1", transit.line.x1());
         obj.insert("y1", transit.line.y1());
@@ -87,9 +87,9 @@ inline QJsonValue transitListToJsonValue(const QVector<Transit> &list)
     return result;
 }
 
-inline QVector<Transit> jsonValueToTransitList(const QJsonValue &jValue)
+inline QVector<ShareCursor::Transit> jsonValueToTransitList(const QJsonValue &jValue)
 {
-    QVector<Transit> result;
+    QVector<ShareCursor::Transit> result;
     QJsonArray arr = jValue.toArray();
     for (const QJsonValue &value: arr) {
         const QJsonObject &obj = value.toObject();
@@ -106,10 +106,10 @@ inline QVector<Transit> jsonValueToTransitList(const QJsonValue &jValue)
 
 inline void fillDeviceJsonMessage(QJsonObject &jsonOut, const char* type)
 {
-    jsonOut.insert(KEY_TYPE, type);
-    jsonOut.insert(KEY_NAME, Settings.name());
-    jsonOut.insert(KEY_UUID, Settings.uuid().toString());
-    jsonOut.insert(KEY_SCREENS, rectListToJsonValue(Settings.screens()));
+    jsonOut.insert(ShareCursor::KEY_TYPE, type);
+    jsonOut.insert(ShareCursor::KEY_NAME, Settings.name());
+    jsonOut.insert(ShareCursor::KEY_UUID, Settings.uuid().toString());
+    jsonOut.insert(ShareCursor::KEY_SCREENS, rectListToJsonValue(Settings.screens()));
 }
 
 };
