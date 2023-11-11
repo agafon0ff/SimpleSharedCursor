@@ -111,6 +111,7 @@ void BroadcastDeviceSearch::handleSearchRequest(const QHostAddress &host, const 
 
     sslWraper.encrypt(datagram, datagramEnc);
     udpSocket.writeDatagram(datagramEnc, host, port);
+    emit deviceFound(jObject);
 }
 
 void BroadcastDeviceSearch::handleSearchResponse(const QJsonObject &jObject)

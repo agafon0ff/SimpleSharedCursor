@@ -134,6 +134,13 @@ void SettingsFacade::setDevice(const QJsonObject &obj)
     }
 }
 
+void SettingsFacade::removeDevice(const QUuid &uuid)
+{
+    if (_devices.contains(uuid)) {
+        _devices.remove(uuid);
+    }
+}
+
 void SettingsFacade::setDevicePosition(const QUuid &uuid, const QPoint &pos)
 {
     if (!_devices.contains(uuid))

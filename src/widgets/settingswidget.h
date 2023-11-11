@@ -42,10 +42,12 @@ private:
     QMap<QUuid, DeviceItemWidget*> deviceWidgets;
     QMap<QUuid, QListWidgetItem*> listIitemWidgets;
     JsonLoader geometryLoader;
+    QVector<QUuid> removeList;
 
     void createFoundDeviceWidget(QSharedPointer<ShareCursor::Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);
     void onBtnOkClicked();
+    void onBtnCancelClicked();
 
     void showEvent(QShowEvent *e) override;
     void closeEvent(QCloseEvent *e) override;

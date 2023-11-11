@@ -32,10 +32,12 @@ public slots:
     void setKeyword(const QString &keyword);
     void setPortTcp(quint16 port);
     void setPortUdp(quint16 port);
-    void setDevice(const QJsonObject &obj);
     void setDevicePosition(const QUuid &uuid, const QPoint &pos);
     void setTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits);
     void setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state);
+
+    void setDevice(const QJsonObject &obj);
+    void removeDevice(const QUuid &uuid);
 
     void setValue(const char *key, const QJsonValue &value);
     QJsonValue value(const char* key, const QJsonValue &defaultValue = QJsonValue());

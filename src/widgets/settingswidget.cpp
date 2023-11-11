@@ -17,6 +17,7 @@ SettingsWidget::SettingsWidget(QWidget *parent)
 
     connect(ui->btnFindDevices, &QPushButton::clicked, this, &SettingsWidget::findDevices);
     connect(ui->btnOk, &QPushButton::clicked, this, &SettingsWidget::onBtnOkClicked);
+    connect(ui->btnCancel, &QPushButton::clicked, this, &SettingsWidget::onBtnCancelClicked);
 
     positioningWidget = new ScreenPositionWidget(this);
     ui->positioningLayout->addWidget(positioningWidget, 0, 0);
@@ -67,6 +68,7 @@ void SettingsWidget::clearWidget()
     ui->listWidgetDevices->clear();
     listIitemWidgets.clear();
     deviceWidgets.clear();
+    removeList.clear();
 
     positioningWidget->clearWidget();
 
@@ -131,8 +133,7 @@ void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
     }
 
     positioningWidget->removeDevice(uuid);
-
-    emit removeDevice(uuid);
+    removeList.append(uuid);
 }
 
 void SettingsWidget::onBtnOkClicked()
@@ -154,7 +155,20 @@ void SettingsWidget::onBtnOkClicked()
     }
 
     emit transitsChanged(Settings.transits());
+
+    for (const QUuid &uuid: qAsConst(removeList)) {
+        Settings.removeDevice(uuid);
+        emit removeDevice(uuid);
+    }
+
     Settings.save();
+    hide();
+}
+
+void SettingsWidget::onBtnCancelClicked()
+{
+    hide();
+    clearWidget();
 }
 
 void SettingsWidget::showEvent(QShowEvent *)
