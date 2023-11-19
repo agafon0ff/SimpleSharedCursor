@@ -1,6 +1,7 @@
 #include <QTimerEvent>
 #include <QDebug>
 #include <QCursor>
+#include <qmath.h>
 
 #include "cursorhandler.h"
 
@@ -77,6 +78,7 @@ void CursorHandler::checkCursor()
 {
     QUuid newTransitUuid = currentUuid;
     const QPoint &pos = QCursor::pos();
+    QLine _line;
 
     for (const ShareCursor::Transit &transit: qAsConst(currentTransits)) {
         const QLine &line = transit.line;
@@ -84,6 +86,7 @@ void CursorHandler::checkCursor()
             line.y1() <= pos.y() && line.y2() >= pos.y()) {
             if (newTransitUuid != transit.uuid) {
                 newTransitUuid = transit.uuid;
+                _line = line;
             }
             break;
         }
@@ -94,5 +97,9 @@ void CursorHandler::checkCursor()
         currentTransitState = connnetionStates.value(transitUuid);
 
         qDebug() << "Intersect with:" << newTransitUuid << ", state:" << currentTransitState;
+    }
+
+    if (transitUuid != currentUuid) {
+
     }
 }

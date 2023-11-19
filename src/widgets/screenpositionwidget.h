@@ -1,35 +1,41 @@
 #pragma once
 
+#include <QGraphicsScene>
 #include <QGraphicsView>
-#include "screenrectitem.h"
+#include <QRect>
+#include <QUuid>
 #include "global.h"
+
+#include "screenrectitem.h"
 
 class ScreenPositionWidget : public QGraphicsView
 {
     Q_OBJECT
 public:
-    explicit ScreenPositionWidget(QWidget *parent = nullptr);
+    ScreenPositionWidget(QWidget *parent = nullptr);
     ~ScreenPositionWidget();
 
     QVector<ScreenRectItem*> screenRectItems() const;
-
-signals:
-    void screenPositionChanged(const QUuid &uuid, const QPoint &pos);
 
 public slots:
     void addDevice(QSharedPointer<ShareCursor::Device> device);
     void removeDevice(const QUuid &uuid);
     void clearWidget();
+    void normalize();
 
 private slots:
+    void onItemPositionChanged(ScreenRectItem *item, const QPointF &dpos);
     void calculateSceneRect();
-    void calculateIntersections();
-    void clearIntersections();
-    void onScreenPositionChanged(ScreenRectItem *item);
+    void calculateTransits();
 
 private:
     QVector<ScreenRectItem*> items;
     QGraphicsScene graphicsScene;
+    QPointF minPos{0., 0.};
+
+    ScreenRectItem *createRect(const QRect &rect, const QPoint &pos);
+    void calculateTransitsTopBottom(ScreenRectItem *itemFrom, ScreenRectItem *itemTo);
+    void calculateTransitsLeftRight(ScreenRectItem *itemFrom, ScreenRectItem *itemTo);
 
     void resizeEvent(QResizeEvent *) override;
 };

@@ -77,11 +77,13 @@ inline QJsonValue transitListToJsonValue(const QVector<ShareCursor::Transit> &li
     QJsonArray result;
     for (const ShareCursor::Transit &transit: list) {
         QJsonObject obj;
-        obj.insert("x1", transit.line.x1());
-        obj.insert("y1", transit.line.y1());
-        obj.insert("x2", transit.line.x2());
-        obj.insert("y2", transit.line.y2());
+        obj.insert("lineX1", transit.line.x1());
+        obj.insert("lineY1", transit.line.y1());
+        obj.insert("lineX2", transit.line.x2());
+        obj.insert("lineY2", transit.line.y2());
         obj.insert("uuid", transit.uuid.toString());
+        obj.insert("posX", transit.pos.x());
+        obj.insert("posY", transit.pos.y());
         result.append(obj);
     }
     return result;
@@ -93,12 +95,18 @@ inline QVector<ShareCursor::Transit> jsonValueToTransitList(const QJsonValue &jV
     QJsonArray arr = jValue.toArray();
     for (const QJsonValue &value: arr) {
         const QJsonObject &obj = value.toObject();
-        QLine line(obj.value("x1").toInt(),
-                   obj.value("y1").toInt(),
-                   obj.value("x2").toInt(),
-                   obj.value("y2").toInt());
+
+        QLine line(obj.value("lineX1").toInt(),
+                   obj.value("lineY1").toInt(),
+                   obj.value("lineX2").toInt(),
+                   obj.value("lineY2").toInt());
+
+        QPoint pos(obj.value("posX").toInt(),
+                   obj.value("posY").toInt());
+
         QUuid uuid = QUuid::fromString(obj.value("uuid").toString());
-        result.append({line, uuid});
+
+        result.append({line, pos, uuid});
     }
 
     return result;

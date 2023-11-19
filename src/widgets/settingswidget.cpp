@@ -94,7 +94,9 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<ShareCursor::Device>
     if (device.isNull())
         return;
 
-    if (!device->self) {
+    qDebug() << Q_FUNC_INFO << device->uuid << device->name;
+
+    if (!device->self && !deviceWidgets.contains(device->uuid)) {
         DeviceItemWidget *widget = new DeviceItemWidget(this);
         widget->setUuid(device->uuid);
         widget->setName(device->name);
@@ -148,10 +150,12 @@ void SettingsWidget::onBtnOkClicked()
         emit nameChanged(Settings.keyword());
     }
 
+    Settings.clearTransits();
+    positioningWidget->normalize();
     const QVector<ScreenRectItem*> &items = positioningWidget->screenRectItems();
     for (ScreenRectItem* item: items) {
-        Settings.setDevicePosition(item->uuid(), item->position());
-        Settings.setTransitsToDevice(item->uuid(), item->transits());
+        Settings.setDevicePosition(item->uuid(), item->pos().toPoint());
+        Settings.addTransitsToDevice(item->uuid(), item->transits());
     }
 
     emit transitsChanged(Settings.transits());
@@ -162,6 +166,8 @@ void SettingsWidget::onBtnOkClicked()
     }
 
     Settings.save();
+
+    clearWidget();
     hide();
 }
 

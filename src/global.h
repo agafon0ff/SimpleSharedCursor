@@ -51,6 +51,7 @@ namespace ShareCursor
     struct Transit
     {
         QLine line;
+        QPoint pos;
         QUuid uuid;
     };
 

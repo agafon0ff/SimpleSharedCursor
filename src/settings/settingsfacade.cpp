@@ -149,6 +149,23 @@ void SettingsFacade::setDevicePosition(const QUuid &uuid, const QPoint &pos)
     _devices.value(uuid)->position = pos;
 }
 
+void SettingsFacade::setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state)
+{
+    if (!_devices.contains(uuid))
+        return;
+
+    _devices.value(uuid)->state = state;
+}
+
+void SettingsFacade::clearTransits()
+{
+    auto i = _devices.constBegin();
+    while (i != _devices.constEnd()) {
+        i.value()->transits.clear();
+        ++i;
+    }
+}
+
 void SettingsFacade::setTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits)
 {
     if (!_devices.contains(uuid))
@@ -157,12 +174,12 @@ void SettingsFacade::setTransitsToDevice(const QUuid &uuid, const QVector<ShareC
     _devices.value(uuid)->transits = transits;
 }
 
-void SettingsFacade::setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state)
+void SettingsFacade::addTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits)
 {
     if (!_devices.contains(uuid))
         return;
 
-    _devices.value(uuid)->state = state;
+    _devices.value(uuid)->transits.append(transits);
 }
 
 void SettingsFacade::setValue(const char *key, const QJsonValue &value)

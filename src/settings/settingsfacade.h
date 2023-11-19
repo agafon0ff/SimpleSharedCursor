@@ -33,8 +33,11 @@ public slots:
     void setPortTcp(quint16 port);
     void setPortUdp(quint16 port);
     void setDevicePosition(const QUuid &uuid, const QPoint &pos);
-    void setTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits);
     void setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state);
+
+    void clearTransits();
+    void setTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits);
+    void addTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits);
 
     void setDevice(const QJsonObject &obj);
     void removeDevice(const QUuid &uuid);

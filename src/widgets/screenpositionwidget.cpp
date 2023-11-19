@@ -1,9 +1,10 @@
+#include <QGraphicsRectItem>
+#include <QDebug>
 #include "screenpositionwidget.h"
 
 ScreenPositionWidget::ScreenPositionWidget(QWidget *parent)
-    : QGraphicsView{parent}
+    : QGraphicsView(parent)
 {
-    setRenderHint(QPainter::Antialiasing);
     setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -16,7 +17,6 @@ ScreenPositionWidget::ScreenPositionWidget(QWidget *parent)
 
 ScreenPositionWidget::~ScreenPositionWidget()
 {
-    clearWidget();
 }
 
 QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
@@ -26,18 +26,11 @@ QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
 
 void ScreenPositionWidget::addDevice(QSharedPointer<ShareCursor::Device> device)
 {
-    ScreenRectItem *item = new ScreenRectItem;
-    item->setUuid(device->uuid);
-    item->setRects(device->screens);
-    item->setText(device->name);
-    item->setPos(device->position.x(), device->position.y());
-    scene()->addItem(item);
-    items.append(item);
-
-    connect(item, &ScreenRectItem::movementHasStarted, this, &ScreenPositionWidget::clearIntersections);
-    connect(item, &ScreenRectItem::movementHasFinished, this, &ScreenPositionWidget::onScreenPositionChanged);
-
-    clearIntersections();
+    for (const QRect &rect: qAsConst(device->screens)) {
+        ScreenRectItem *item = createRect(rect, device->position);
+        item->setText(device->name);
+        item->setUuid(device->uuid);
+    }
     calculateSceneRect();
 }
 
@@ -45,15 +38,13 @@ void ScreenPositionWidget::removeDevice(const QUuid &uuid)
 {
     for (ScreenRectItem *item: qAsConst(items)) {
         if (item->uuid() == uuid) {
-            disconnect(item, &ScreenRectItem::movementHasStarted, this, &ScreenPositionWidget::clearIntersections);
-            disconnect(item, &ScreenRectItem::movementHasFinished, this, &ScreenPositionWidget::onScreenPositionChanged);
+            disconnect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
+            disconnect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
             items.removeOne(item);
             item->deleteLater();
             break;
         }
     }
-
-    clearIntersections();
     calculateSceneRect();
 }
 
@@ -66,69 +57,142 @@ void ScreenPositionWidget::clearWidget()
     items.clear();
 }
 
+void ScreenPositionWidget::normalize()
+{
+     for (ScreenRectItem *item: qAsConst(items)) {
+         item->setPos(item->pos() - minPos);
+     }
+     calculateTransits();
+}
+
+void ScreenPositionWidget::onItemPositionChanged(ScreenRectItem *_item, const QPointF &dpos)
+{
+    for (ScreenRectItem *item: qAsConst(items)) {
+        if (_item == item) continue;
+        if (item->uuid() == _item->uuid()) {
+            item->setPos(item->pos() + dpos);
+        }
+    }
+}
+
 void ScreenPositionWidget::calculateSceneRect()
 {
     if (items.isEmpty())
         return;
 
     ScreenRectItem *item = items.at(0);
-    int x = item->x(), y = item->y();
-    int w = item->x() + item->width();
-    int h = item->y() + item->height();
-    int indent = item->height();
+    qreal x = item->x(), y = item->y();
+    qreal w = item->x() + item->rect().right();
+    qreal h = item->y() + item->rect().bottom();
+    qreal indent = item->rect().height();
 
     for (int i=1; i<items.size(); ++i) {
-        const QRect &rect = items.at(i)->geometry();
-        if (rect.x() < x) x = rect.x();
-        if (rect.y() < y) y = rect.y();
-        if (rect.width() + rect.x() > w) w = rect.width() + rect.x();
-        if (rect.height() + rect.y() > h) h = rect.height() + rect.y();
+        item = items.at(i);
+        if (item->x() < x) x = item->x();
+        if (item->y() < y) y = item->y();
+        if (item->rect().right() + item->x() > w) w = item->rect().right() + item->x();
+        if (item->rect().bottom() + item->y() > h) h = item->rect().bottom() + item->y();
+        if (item->rect().height() > indent) indent = item->rect().height();
     }
 
-    QRectF bound(QPointF(x - indent, y - indent),
-                 QPointF(w + indent, h + indent));
+    w = w - x;
+    h = h - y;
+    minPos = {x, y};
+
+    QRectF bound(x - indent, y - indent, w + indent*2 , h + indent*2);
 
     setSceneRect(bound);
     fitInView(bound, Qt::KeepAspectRatio);
-    calculateIntersections();
+    calculateTransits();
 }
 
-void ScreenPositionWidget::calculateIntersections()
+void ScreenPositionWidget::calculateTransits()
 {
-    for (ScreenRectItem *calcItem: qAsConst(items)) {
-        for (ScreenRectItem *item: qAsConst(items)) {
-            if (calcItem == item) continue;
+    for (ScreenRectItem *item: qAsConst(items)) {
+        item->clearTransits();
+    }
 
-            const QVector<QRect> &rects = item->rects();
-
-            for (const QRect &rect: rects) {
-                QRect itemRect(item->x() + rect.x(),
-                               item->y() + rect.y(),
-                               rect.width(), rect.height());
-
-                calcItem->calculateTransits(item->uuid(), itemRect);
-            }
+    for (ScreenRectItem *from: qAsConst(items)) {
+        for (ScreenRectItem *to: qAsConst(items)) {
+            if (from == to) continue;
+            if (from->uuid() == to->uuid()) continue;
+            calculateTransitsTopBottom(from, to);
+            calculateTransitsLeftRight(from, to);
         }
     }
 }
 
-void ScreenPositionWidget::clearIntersections()
+ScreenRectItem *ScreenPositionWidget::createRect(const QRect &rect, const QPoint &pos)
 {
-    for (ScreenRectItem *calcItem: qAsConst(items))
-        calcItem->clearTransits();
+    ScreenRectItem *item = new ScreenRectItem();
+    scene()->addItem(item);
+    item->setRect(rect);
+    item->setPos(pos);
+
+    connect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
+    connect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
+
+    items.append(item);
+
+    return item;
 }
 
-void ScreenPositionWidget::onScreenPositionChanged(ScreenRectItem *item)
+void ScreenPositionWidget::calculateTransitsTopBottom(ScreenRectItem *itemFrom, ScreenRectItem *itemTo)
 {
-    calculateSceneRect();
+    const QRectF &from = itemFrom->adjusted();
+    const QRectF &to = itemTo->adjusted();
+    qreal distance = from.top() - to.bottom();
 
-    if (!item)
-        return;
+    QLineF lineFrom = QLineF(from.topLeft(), from.topRight());
+    QLineF lineTo = QLineF(to.bottomLeft(), to.bottomRight());
 
-    emit screenPositionChanged(item->uuid(), QPoint(item->x(), item->y()));
+    qreal limit = (lineFrom.dx() + lineTo.dx()) / 6.;
+
+    if (distance >= 0 && distance < limit
+            && lineFrom.x2() > lineTo.x1()
+            && lineFrom.x1() < lineTo.x2()) {
+
+        itemFrom->addTransit({QLine(qMax(lineFrom.x1() - itemFrom->x(), lineTo.x1() - itemFrom->x()), itemFrom->rect().y(),
+                                    qMin(lineFrom.x2() - itemFrom->x(), lineTo.x2() - itemFrom->x()), itemFrom->rect().y()),
+                              QPoint(qMax(lineFrom.x1() - itemTo->x(), lineTo.x1() - itemTo->x()), itemTo->rect().bottom()),
+                              itemTo->uuid()});
+
+        itemTo->addTransit({QLine(qMax(lineFrom.x1() - itemTo->x(), lineTo.x1() - itemTo->x()), itemTo->rect().bottom(),
+                                  qMin(lineFrom.x2() - itemTo->x(), lineTo.x2() - itemTo->x()), itemTo->rect().bottom()),
+                              QPoint(qMax(lineFrom.x1() - itemFrom->x(), lineTo.x1() - itemFrom->x()), itemFrom->rect().y()),
+                              itemFrom->uuid()});
+    }
+}
+
+void ScreenPositionWidget::calculateTransitsLeftRight(ScreenRectItem *itemFrom, ScreenRectItem *itemTo)
+{
+    const QRectF &from = itemFrom->adjusted();
+    const QRectF &to = itemTo->adjusted();
+    qreal distance = from.left() - to.right();
+
+    QLineF lineFrom = QLineF(from.topLeft(), from.bottomLeft());
+    QLineF lineTo = QLineF(to.topRight(), to.bottomRight());
+
+    qreal limit = (lineFrom.dy() + lineTo.dy()) / 6.;
+
+    if (distance >= 0 && distance < limit
+            && lineFrom.y2() > lineTo.y1()
+            && lineFrom.y1() < lineTo.y2()) {
+
+        itemFrom->addTransit({QLine(itemFrom->rect().x(), qMax(lineFrom.y1() - itemFrom->y(), lineTo.y1() - itemFrom->y()),
+                                    itemFrom->rect().x(), qMin(lineFrom.y2() - itemFrom->y(), lineTo.y2() - itemFrom->y())),
+                              QPoint(itemTo->rect().right(), qMax(lineFrom.y1() - itemTo->y(), lineTo.y1() - itemTo->y())),
+                              itemTo->uuid()});
+
+        itemTo->addTransit({QLine(itemTo->rect().right(), qMax(lineFrom.y1() - itemTo->y(), lineTo.y1() - itemTo->y()),
+                                  itemTo->rect().right(), qMin(lineFrom.y2() - itemTo->y(), lineTo.y2() - itemTo->y())),
+                              QPoint(itemFrom->rect().x(), qMax(lineFrom.y1() - itemFrom->y(), lineTo.y1() - itemFrom->y())),
+                              itemFrom->uuid()});
+    }
 }
 
 void ScreenPositionWidget::resizeEvent(QResizeEvent *)
 {
     calculateSceneRect();
 }
+
