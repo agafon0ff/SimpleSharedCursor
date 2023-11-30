@@ -37,7 +37,7 @@ public:
 signals:
     void deviceConnected(TcpSocket* self, const QJsonObject &json);
     void deviceDisconnected(TcpSocket* self);
-    void message(const QJsonObject &json);
+    void message(const QUuid &uuid, const QJsonObject &json);
 
 public slots:
     void setUuid(const QUuid &uuid);

@@ -29,6 +29,7 @@ namespace ShareCursor
     inline const char* KEY_HASHSUM = "hashsum";
     inline const char* KEY_NONCE = "nonce";
     inline const char* KEY_TYPE = "type";
+    inline const char* KEY_VALUE = "value";
     inline const char* KEY_HOST = "host";
     inline const char* KEY_SELF = "self";
     inline const char* KEY_STATE = "state";
@@ -36,6 +37,9 @@ namespace ShareCursor
     inline const char* KEY_SCREENS = "screens";
     inline const char* KEY_POSITION = "position";
     inline const char* KEY_TRANSITS = "transits";
+    inline const char* KEY_CURSOR_DELTA = "delta";
+    inline const char* KEY_CURSOR_POS = "cursorPos";
+    inline const char* KEY_REMOTE_CONTROL = "remoteControl";
 
     inline const quint16 DEFAULT_TCP_PORT = 25786;
     inline const quint16 DEFAULT_UDP_PORT = 25787;
@@ -46,6 +50,12 @@ namespace ShareCursor
         Disconnected,
         Connected,
         Waiting
+    };
+
+    enum ControlState {
+        SelfControl = 0,
+        Master,
+        Slave
     };
 
     struct Transit

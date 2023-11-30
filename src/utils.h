@@ -13,7 +13,7 @@
 #include "global.h"
 #include "settingsfacade.h"
 
-namespace Utils {
+namespace ShareCursor {
 
 inline bool convertArrayToJson(const QByteArray &data, QJsonObject &result)
 {

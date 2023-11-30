@@ -2,7 +2,9 @@
 #include "deviceconnectmanager.h"
 #include "settingswidget.h"
 #include "settingsfacade.h"
+#include "inputsimulator.h"
 #include "cursorhandler.h"
+#include "cursorholder.h"
 #include "traymenu.h"
 #include "global.h"
 
@@ -39,10 +41,19 @@ int main(int argc, char *argv[])
 
     Settings.loadFacadeProperties();
 
+    CursorHolder cursorHolder;
+    cursorHolder.resize(100, 100);
+    cursorHolder.move(Settings.screenCenter());
+
+    InputSimulator inputSimulator;
+
     CursorHandler cursorHandler;
+    cursorHandler.setHoldCursorPosition(cursorHolder.geometry().center());
+
     QThread cursorCheckerThread;
     QObject::connect(&cursorCheckerThread, &QThread::started, &cursorHandler, &CursorHandler::start);
     QObject::connect(&cursorCheckerThread, &QThread::finished, &cursorHandler, &CursorHandler::stop);
+    QObject::connect(&cursorHandler, &CursorHandler::controlRemoteDevice, &cursorHolder, &CursorHolder::holdCursor);
     cursorHandler.moveToThread(&cursorCheckerThread);
 
     DeviceConnectManager devConnectManager;
@@ -75,6 +86,11 @@ int main(int argc, char *argv[])
     QObject::connect(&settingsWidget, &SettingsWidget::removeDevice, &devConnectManager, &DeviceConnectManager::handleRemoveDevice);
     QObject::connect(&settingsWidget, &SettingsWidget::keywordChanged, &devConnectManager, &DeviceConnectManager::setKeyword);
     QObject::connect(&settingsWidget, &SettingsWidget::transitsChanged, &cursorHandler, &CursorHandler::setTransits);
+    QObject::connect(&cursorHandler, &CursorHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::controlledByUuid, &cursorHandler, &CursorHandler::setControlledByUuid);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::remoteCursorPosition, &cursorHandler, &CursorHandler::setRemoteCursorPos);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::cursorPosition, &inputSimulator, &InputSimulator::setCutsorPosition);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::cursorDelta, &inputSimulator, &InputSimulator::setCutsorDelta);
 
     cursorCheckerThread.start();
     devConnectManagerThread.start();
@@ -82,8 +98,6 @@ int main(int argc, char *argv[])
     Settings.loadDevices();
     cursorHandler.setCurrentUuid(Settings.uuid());
     cursorHandler.setTransits(Settings.transits());
-
-    settingsWidget.show();
 
     int result = a.exec();
 

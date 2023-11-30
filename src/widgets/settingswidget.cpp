@@ -120,6 +120,8 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<ShareCursor::Device>
 
 void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
 {
+    qDebug() << Q_FUNC_INFO << uuid;
+
     if (listIitemWidgets.contains(uuid)) {
         DeviceItemWidget *deviceWidget = deviceWidgets.value(uuid);
         QListWidgetItem *listItem = listIitemWidgets.value(uuid);

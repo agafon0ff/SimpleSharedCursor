@@ -154,12 +154,12 @@ void ScreenPositionWidget::calculateTransitsTopBottom(ScreenRectItem *itemFrom, 
 
         itemFrom->addTransit({QLine(qMax(lineFrom.x1() - itemFrom->x(), lineTo.x1() - itemFrom->x()), itemFrom->rect().y(),
                                     qMin(lineFrom.x2() - itemFrom->x(), lineTo.x2() - itemFrom->x()), itemFrom->rect().y()),
-                              QPoint(qMax(lineFrom.x1() - itemTo->x(), lineTo.x1() - itemTo->x()), itemTo->rect().bottom()),
+                              QPoint(qMax(lineFrom.x1() - itemTo->x(), lineTo.x1() - itemTo->x()), itemTo->rect().bottom()-4),
                               itemTo->uuid()});
 
-        itemTo->addTransit({QLine(qMax(lineFrom.x1() - itemTo->x(), lineTo.x1() - itemTo->x()), itemTo->rect().bottom(),
-                                  qMin(lineFrom.x2() - itemTo->x(), lineTo.x2() - itemTo->x()), itemTo->rect().bottom()),
-                              QPoint(qMax(lineFrom.x1() - itemFrom->x(), lineTo.x1() - itemFrom->x()), itemFrom->rect().y()),
+        itemTo->addTransit({QLine(qMax(lineFrom.x1() - itemTo->x(), lineTo.x1() - itemTo->x()), itemTo->rect().bottom()-1,
+                                  qMin(lineFrom.x2() - itemTo->x(), lineTo.x2() - itemTo->x()), itemTo->rect().bottom()-1),
+                              QPoint(qMax(lineFrom.x1() - itemFrom->x(), lineTo.x1() - itemFrom->x()), itemFrom->rect().y()+4),
                               itemFrom->uuid()});
     }
 }
@@ -181,12 +181,12 @@ void ScreenPositionWidget::calculateTransitsLeftRight(ScreenRectItem *itemFrom, 
 
         itemFrom->addTransit({QLine(itemFrom->rect().x(), qMax(lineFrom.y1() - itemFrom->y(), lineTo.y1() - itemFrom->y()),
                                     itemFrom->rect().x(), qMin(lineFrom.y2() - itemFrom->y(), lineTo.y2() - itemFrom->y())),
-                              QPoint(itemTo->rect().right(), qMax(lineFrom.y1() - itemTo->y(), lineTo.y1() - itemTo->y())),
+                              QPoint(itemTo->rect().right()-4, qMax(lineFrom.y1() - itemTo->y(), lineTo.y1() - itemTo->y())),
                               itemTo->uuid()});
 
-        itemTo->addTransit({QLine(itemTo->rect().right(), qMax(lineFrom.y1() - itemTo->y(), lineTo.y1() - itemTo->y()),
-                                  itemTo->rect().right(), qMin(lineFrom.y2() - itemTo->y(), lineTo.y2() - itemTo->y())),
-                              QPoint(itemFrom->rect().x(), qMax(lineFrom.y1() - itemFrom->y(), lineTo.y1() - itemFrom->y())),
+        itemTo->addTransit({QLine(itemTo->rect().right()-1, qMax(lineFrom.y1() - itemTo->y(), lineTo.y1() - itemTo->y()),
+                                  itemTo->rect().right()-1, qMin(lineFrom.y2() - itemTo->y(), lineTo.y2() - itemTo->y())),
+                              QPoint(itemFrom->rect().x()+4, qMax(lineFrom.y1() - itemFrom->y(), lineTo.y1() - itemFrom->y())),
                               itemFrom->uuid()});
     }
 }

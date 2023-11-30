@@ -5,13 +5,7 @@
 
 #include "cursorhandler.h"
 
-#ifdef WIN32
-#endif
-
-#ifdef __linux__
-#endif
-
-static const int UPDATE_INTERVAL = 50;
+static const int UPDATE_INTERVAL = 25;
 
 CursorHandler::CursorHandler(QObject *parent)
     : QObject{parent}
@@ -47,23 +41,74 @@ void CursorHandler::stop()
     emit finished();
 }
 
+void CursorHandler::setHoldCursorPosition(const QPoint &pos)
+{
+    qDebug() << Q_FUNC_INFO << pos;
+    holdCursorPosition = pos;
+}
+
 void CursorHandler::setCurrentUuid(const QUuid &uuid)
 {
     qDebug() << Q_FUNC_INFO << uuid;
-    currentUuid = uuid;
+
+    transitUuid = uuid;
+    currentDeviceUuid = uuid;
+    controlledByUuid = uuid;
+    connnetionStates[uuid] = ShareCursor::Connected;
+
+    auto it = transitsMap.find(uuid);
+    if (it != transitsMap.end()) {
+        currentTransits = it.value();
+    }
+    else {
+        currentTransits.clear();
+    }
 }
 
 void CursorHandler::setTransits(const QMap<QUuid, QVector<ShareCursor::Transit> > &_transits)
 {
     qDebug() << Q_FUNC_INFO;
     transitsMap = _transits;
-    currentTransits = transitsMap.value(currentUuid);
+    currentTransits = transitsMap.value(currentDeviceUuid);
 }
 
 void CursorHandler::setConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state)
 {
     qDebug() << Q_FUNC_INFO << uuid << state;
     connnetionStates[uuid] = state;
+
+    switch (controlState) {
+    case ShareCursor::SelfControl:
+        break;
+    case ShareCursor::Master:
+        if (uuid == transitUuid && state != ShareCursor::Connected) {
+            controlState = ShareCursor::SelfControl;
+            transitUuid = currentDeviceUuid;
+            sendRemoteControlMessage(false, {0, 0});
+        }
+        break;
+    case ShareCursor::Slave:
+        if (uuid == controlledByUuid && state != ShareCursor::Connected) {
+            controlState = ShareCursor::SelfControl;
+            transitUuid = currentDeviceUuid;
+        }
+        break;
+    }
+}
+
+void CursorHandler::setRemoteCursorPos(const QUuid &uuid, const QPoint &pos)
+{
+    if (controlState == ShareCursor::Master && uuid == transitUuid) {
+        checkCursor(pos);
+    }
+}
+
+void CursorHandler::setControlledByUuid(const QUuid &uuid)
+{
+    qDebug() << Q_FUNC_INFO << uuid;
+
+    controlledByUuid = uuid;
+    controlState = uuid == currentDeviceUuid ? ShareCursor::SelfControl : ShareCursor::Slave;
 }
 
 void CursorHandler::timerEvent(QTimerEvent *e)
@@ -71,35 +116,109 @@ void CursorHandler::timerEvent(QTimerEvent *e)
     if (e->timerId() != timerId)
         return;
 
-    checkCursor();
+    const QPoint &pos = QCursor::pos();
+
+    switch (controlState) {
+    case ShareCursor::SelfControl:
+        checkCursor(pos);
+        break;
+    case ShareCursor::Master:
+        setCursorPosition(holdCursorPosition);
+        sendCursorDelta(pos);
+        break;
+    case ShareCursor::Slave:
+        sendCursorPosition(pos);
+        break;
+    }
+
+    lastCursorPosition = pos;
 }
 
-void CursorHandler::checkCursor()
+void CursorHandler::checkCursor(const QPoint &pos)
 {
-    QUuid newTransitUuid = currentUuid;
-    const QPoint &pos = QCursor::pos();
-    QLine _line;
+    if (currentTransits.isEmpty()) {
+        return;
+    }
 
-    for (const ShareCursor::Transit &transit: qAsConst(currentTransits)) {
-        const QLine &line = transit.line;
+    QUuid newTransitUuid = transitUuid;
+    auto transitIterator = currentTransits.begin();
+
+    for (; transitIterator<currentTransits.end(); ++transitIterator) {
+        const QLine &line = transitIterator->line;
         if (line.x1() <= pos.x() && line.x2() >= pos.x() &&
             line.y1() <= pos.y() && line.y2() >= pos.y()) {
-            if (newTransitUuid != transit.uuid) {
-                newTransitUuid = transit.uuid;
-                _line = line;
+            if (newTransitUuid != transitIterator->uuid) {
+                newTransitUuid = transitIterator->uuid;
             }
             break;
         }
     }
 
     if (newTransitUuid != transitUuid) {
-        transitUuid = newTransitUuid;
-        currentTransitState = connnetionStates.value(transitUuid);
+        if (connnetionStates.value(newTransitUuid) == ShareCursor::Connected && transitsMap.contains(newTransitUuid)) {
+            sendRemoteControlMessage(false, {0, 0});
+            transitUuid = newTransitUuid;
+            currentTransitState = connnetionStates.value(transitUuid);
+            currentTransits = transitsMap.value(transitUuid);
 
-        qDebug() << "Intersect with:" << newTransitUuid << ", state:" << currentTransitState;
+            const QPoint remotePos = calculateRemotePos(*transitIterator, pos);
+
+            if (transitUuid == currentDeviceUuid) {
+                controlState = ShareCursor::SelfControl;
+                setCursorPosition(remotePos);
+            }
+            else {
+                controlState = ShareCursor::Master;
+                setCursorPosition(holdCursorPosition);
+                sendRemoteControlMessage(true, remotePos);
+            }
+        }
+    }
+}
+
+void CursorHandler::sendCursorDelta(const QPoint &pos)
+{
+    if (pos == lastCursorPosition)
+        return;
+
+    jsonDelta[ShareCursor::KEY_TYPE] = ShareCursor::KEY_CURSOR_DELTA;
+    jsonDelta[ShareCursor::KEY_CURSOR_DELTA] = ShareCursor::pointToJsonValue(pos - holdCursorPosition);
+    emit message(transitUuid, jsonDelta);
+}
+
+void CursorHandler::sendCursorPosition(const QPoint &pos)
+{
+    if (pos == lastCursorPosition)
+        return;
+
+    jsonPosition[ShareCursor::KEY_TYPE] = ShareCursor::KEY_CURSOR_POS;
+    jsonPosition[ShareCursor::KEY_CURSOR_POS] = ShareCursor::pointToJsonValue(pos);
+    emit message(controlledByUuid, jsonPosition);
+}
+
+void CursorHandler::setCursorPosition(const QPoint &pos)
+{
+    QCursor::setPos(pos);
+}
+
+void CursorHandler::sendRemoteControlMessage(bool state, const QPoint &pos)
+{
+    jsonRemoteControl[ShareCursor::KEY_TYPE] = ShareCursor::KEY_REMOTE_CONTROL;
+    jsonRemoteControl[ShareCursor::KEY_STATE] = state;
+    jsonRemoteControl[ShareCursor::KEY_CURSOR_POS] = ShareCursor::pointToJsonValue(pos);
+
+    emit controlRemoteDevice(state);
+    emit message(transitUuid, jsonRemoteControl);
+}
+
+QPoint CursorHandler::calculateRemotePos(const ShareCursor::Transit &transit, const QPoint &pos)
+{
+    const QLine &line = transit.line;
+    QPoint remoteCursorPosition(transit.pos.x(), transit.pos.y() + (pos.y() - line.y1()));
+
+    if (line.y1() == line.y2()) {
+        remoteCursorPosition = {transit.pos.x() + (pos.x() - line.x1()), transit.pos.y()};
     }
 
-    if (transitUuid != currentUuid) {
-
-    }
+    return remoteCursorPosition;
 }

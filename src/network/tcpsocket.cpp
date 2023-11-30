@@ -87,7 +87,8 @@ void TcpSocket::stop()
 
 void TcpSocket::sendMessage(const QJsonObject &json)
 {
-    Utils::convertJsonToArray(json, dataOut);
+//    qDebug() << Q_FUNC_INFO << uuid << json;
+    ShareCursor::convertJsonToArray(json, dataOut);
     sslWraper.encrypt(dataOut, dataOutEnc);
     write(dataOutEnc);
 }
@@ -98,16 +99,22 @@ void TcpSocket::onReadyRead()
     read(dataIn.data(), dataIn.size());
     sslWraper.decrypt(dataIn, dataInDec);
 
-    if (!Utils::convertArrayToJson(dataInDec, jsonIn)) return;
-    if (!jsonIn.contains(ShareCursor::KEY_UUID)) return;
+    if (!ShareCursor::convertArrayToJson(dataInDec, jsonIn)) {
+        return;
+    }
 
-    messageType = jsonIn.value(ShareCursor::KEY_TYPE).toString();
+//    qDebug() << Q_FUNC_INFO << uuid << jsonIn;
 
     if (_isConnected) {
-        emit message(jsonIn);
+        emit message(uuid, jsonIn);
     }
     else {
+        if (!jsonIn.contains(ShareCursor::KEY_UUID)) {
+            return;
+        }
+
         jsonIn.insert(ShareCursor::KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
+        messageType = jsonIn.value(ShareCursor::KEY_TYPE).toString();
 
         if (messageType == ShareCursor::KEY_CONNECT_REQUEST) {
             _isConnected = true;
@@ -122,8 +129,8 @@ void TcpSocket::onReadyRead()
 
 void TcpSocket::onConnected()
 {
-    Utils::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_REQUEST);
-    Utils::convertJsonToArray(jsonOut, dataOut);
+    ShareCursor::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_REQUEST);
+    ShareCursor::convertJsonToArray(jsonOut, dataOut);
     sslWraper.encrypt(dataOut, dataOutEnc);
     write(dataOutEnc);
 }
@@ -141,6 +148,6 @@ void TcpSocket::onConnectRequestReceived()
 
     emit deviceConnected(this, jsonIn);
 
-    Utils::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_RESPONSE);
+    ShareCursor::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_RESPONSE);
     sendMessage(jsonOut);
 }

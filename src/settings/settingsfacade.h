@@ -18,6 +18,7 @@ public:
     quint16 portTcp() const;
     quint16 portUdp() const;
     QVector<QRect> screens();
+    QPoint screenCenter();
     QSharedPointer<ShareCursor::Device> device(const QUuid &uuid) const;
     QMap<QUuid, QSharedPointer<ShareCursor::Device>> devices() const;
     QMap<QUuid, QVector<ShareCursor::Transit>> transits() const;
@@ -50,7 +51,7 @@ signals:
 
 
 private:
-    JsonLoader loader;
+    JsonLoader _loader;
 
     QUuid _uuid;
     QString _name;
