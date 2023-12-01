@@ -4,7 +4,7 @@
 #include "settingsfacade.h"
 #include "inputsimulator.h"
 #include "cursorhandler.h"
-#include "cursorholder.h"
+#include "inputhandler.h"
 #include "traymenu.h"
 #include "global.h"
 
@@ -41,19 +41,19 @@ int main(int argc, char *argv[])
 
     Settings.loadFacadeProperties();
 
-    CursorHolder cursorHolder;
-    cursorHolder.resize(100, 100);
-    cursorHolder.move(Settings.screenCenter());
+    InputHandler inputHandler;
+    inputHandler.resize(500, 500);
+    inputHandler.setCenterIn(Settings.screenCenter());
 
     InputSimulator inputSimulator;
 
     CursorHandler cursorHandler;
-    cursorHandler.setHoldCursorPosition(cursorHolder.geometry().center());
+    cursorHandler.setHoldCursorPosition(Settings.screenCenter());
 
     QThread cursorCheckerThread;
     QObject::connect(&cursorCheckerThread, &QThread::started, &cursorHandler, &CursorHandler::start);
     QObject::connect(&cursorCheckerThread, &QThread::finished, &cursorHandler, &CursorHandler::stop);
-    QObject::connect(&cursorHandler, &CursorHandler::controlRemoteDevice, &cursorHolder, &CursorHolder::holdCursor);
+    QObject::connect(&cursorHandler, &CursorHandler::controlRemoteDevice, &inputHandler, &InputHandler::holdCursor);
     cursorHandler.moveToThread(&cursorCheckerThread);
 
     DeviceConnectManager devConnectManager;
@@ -87,10 +87,14 @@ int main(int argc, char *argv[])
     QObject::connect(&settingsWidget, &SettingsWidget::keywordChanged, &devConnectManager, &DeviceConnectManager::setKeyword);
     QObject::connect(&settingsWidget, &SettingsWidget::transitsChanged, &cursorHandler, &CursorHandler::setTransits);
     QObject::connect(&cursorHandler, &CursorHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
+    QObject::connect(&inputHandler, &InputHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
     QObject::connect(&devConnectManager, &DeviceConnectManager::controlledByUuid, &cursorHandler, &CursorHandler::setControlledByUuid);
     QObject::connect(&devConnectManager, &DeviceConnectManager::remoteCursorPosition, &cursorHandler, &CursorHandler::setRemoteCursorPos);
     QObject::connect(&devConnectManager, &DeviceConnectManager::cursorPosition, &inputSimulator, &InputSimulator::setCutsorPosition);
     QObject::connect(&devConnectManager, &DeviceConnectManager::cursorDelta, &inputSimulator, &InputSimulator::setCutsorDelta);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::keyboardEvent, &inputSimulator, &InputSimulator::setKeyboardEvent);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::mouseEvent, &inputSimulator, &InputSimulator::setMouseEvent);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::wheelEvent, &inputSimulator, &InputSimulator::setWheelEvent);
 
     cursorCheckerThread.start();
     devConnectManagerThread.start();

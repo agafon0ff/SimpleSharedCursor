@@ -85,6 +85,7 @@ void CursorHandler::setConnectionState(const QUuid &uuid, ShareCursor::Connectio
             controlState = ShareCursor::SelfControl;
             transitUuid = currentDeviceUuid;
             sendRemoteControlMessage(false, {0, 0});
+            emit controlRemoteDevice(currentDeviceUuid, false);
         }
         break;
     case ShareCursor::Slave:
@@ -162,16 +163,20 @@ void CursorHandler::checkCursor(const QPoint &pos)
             currentTransits = transitsMap.value(transitUuid);
 
             const QPoint remotePos = calculateRemotePos(*transitIterator, pos);
+            sendRemoteControlMessage(true, remotePos);
 
             if (transitUuid == currentDeviceUuid) {
                 controlState = ShareCursor::SelfControl;
+                emit controlRemoteDevice(transitUuid, false);
                 setCursorPosition(remotePos);
             }
             else {
                 controlState = ShareCursor::Master;
+                emit controlRemoteDevice(transitUuid, true);
                 setCursorPosition(holdCursorPosition);
-                sendRemoteControlMessage(true, remotePos);
             }
+
+            qDebug() << Q_FUNC_INFO << transitUuid;
         }
     }
 }
@@ -206,8 +211,6 @@ void CursorHandler::sendRemoteControlMessage(bool state, const QPoint &pos)
     jsonRemoteControl[ShareCursor::KEY_TYPE] = ShareCursor::KEY_REMOTE_CONTROL;
     jsonRemoteControl[ShareCursor::KEY_STATE] = state;
     jsonRemoteControl[ShareCursor::KEY_CURSOR_POS] = ShareCursor::pointToJsonValue(pos);
-
-    emit controlRemoteDevice(state);
     emit message(transitUuid, jsonRemoteControl);
 }
 

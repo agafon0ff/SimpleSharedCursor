@@ -1,24 +1,29 @@
 QT += core gui widgets network
 
 CONFIG += c++17
+TEMPLATE = app
+QMAKE_LFLAGS += -no-pie
+QMAKE_CXXFLAGS_RELEASE += -O3
+
 INCLUDEPATH += \
     src \
+    src/input \
     src/network \
     src/settings \
     src/widgets
 
 SOURCES += \
-    src/cursorhandler.cpp \
-    src/inputsimulator.cpp \
     src/main.cpp \
+    src/opensslwrapper.cpp \
+    src/input/cursorhandler.cpp \
+    src/input/inputsimulator.cpp \
+    src/input/inputhandler.cpp \
+    src/network/broadcastdevicesearch.cpp \
     src/network/deviceconnectmanager.cpp \
+    src/network/tcpserver.cpp \
     src/network/tcpsocket.cpp \
     src/settings/jsonloader.cpp \
     src/settings/settingsfacade.cpp \
-    src/opensslwrapper.cpp \
-    src/network/broadcastdevicesearch.cpp \
-    src/network/tcpserver.cpp \
-    src/widgets/cursorholder.cpp \
     src/widgets/deviceitemwidget.cpp \
     src/widgets/screenpositionwidget.cpp \
     src/widgets/screenrectitem.cpp \
@@ -26,18 +31,18 @@ SOURCES += \
     src/widgets/traymenu.cpp
 
 HEADERS += \
-    src/cursorhandler.h \
     src/global.h \
-    src/inputsimulator.h \
+    src/utils.h \
+    src/opensslwrapper.h \
+    src/input/cursorhandler.h \
+    src/input/inputsimulator.h \
+    src/input/inputhandler.h \
     src/network/deviceconnectmanager.h \
+    src/network/broadcastdevicesearch.h \
+    src/network/tcpserver.h \
     src/network/tcpsocket.h \
     src/settings/jsonloader.h \
     src/settings/settingsfacade.h \
-    src/opensslwrapper.h \
-    src/network/broadcastdevicesearch.h \
-    src/network/tcpserver.h \
-    src/utils.h \
-    src/widgets/cursorholder.h \
     src/widgets/deviceitemwidget.h \
     src/widgets/screenpositionwidget.h \
     src/widgets/screenrectitem.h \
@@ -59,3 +64,5 @@ CONFIG += embed_translations
 
 LIBS += -lcrypto
 
+linux-g++: \
+    LIBS += -lX11 -lXtst

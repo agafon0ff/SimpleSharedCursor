@@ -26,7 +26,7 @@ public slots:
 signals:
     void started();
     void finished();
-    void controlRemoteDevice(bool state);
+    void controlRemoteDevice(const QUuid &uuid, bool state);
     void message(const QUuid &uuid, const QJsonObject &json);
 
 private:

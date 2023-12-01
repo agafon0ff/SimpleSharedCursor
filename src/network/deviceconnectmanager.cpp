@@ -183,6 +183,24 @@ void DeviceConnectManager::onMessageReceived(const QUuid &uuid, const QJsonObjec
         const QJsonValue &value = json.value(ShareCursor::KEY_CURSOR_DELTA);
         emit cursorDelta(ShareCursor::jsonValueToPoint(value));
     }
+    else if (type == ShareCursor::KEY_CURSOR_DELTA) {
+        const QJsonValue &value = json.value(ShareCursor::KEY_CURSOR_DELTA);
+        emit cursorDelta(ShareCursor::jsonValueToPoint(value));
+    }
+    else if (type == ShareCursor::KEY_INPUT) {
+        const QJsonValue &inputType = json.value(ShareCursor::KEY_INPUT);
+        int value = json.value(ShareCursor::KEY_VALUE).toInt();
+
+        if (inputType == ShareCursor::KEY_KEYBOARD) {
+            emit keyboardEvent(value, json.value(ShareCursor::KEY_PRESSED).toBool());
+        }
+        else if (inputType == ShareCursor::KEY_MOUSE) {
+            emit mouseEvent(value, json.value(ShareCursor::KEY_PRESSED).toBool());
+        }
+        else if (inputType == ShareCursor::KEY_WHEEL) {
+            emit wheelEvent(value);
+        }
+    }
 }
 
 QJsonObject DeviceConnectManager::devicePtrToJsonObject(QSharedPointer<ShareCursor::Device> device)

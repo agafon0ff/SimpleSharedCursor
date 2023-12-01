@@ -40,6 +40,11 @@ namespace ShareCursor
     inline const char* KEY_CURSOR_DELTA = "delta";
     inline const char* KEY_CURSOR_POS = "cursorPos";
     inline const char* KEY_REMOTE_CONTROL = "remoteControl";
+    inline const char* KEY_INPUT = "input";
+    inline const char* KEY_MOUSE = "mouse";
+    inline const char* KEY_KEYBOARD = "keyboard";
+    inline const char* KEY_WHEEL = "wheel";
+    inline const char* KEY_PRESSED = "pressed";
 
     inline const quint16 DEFAULT_TCP_PORT = 25786;
     inline const quint16 DEFAULT_UDP_PORT = 25787;

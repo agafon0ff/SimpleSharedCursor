@@ -36,8 +36,12 @@ signals:
     void deviceConnectionChanged(const QUuid &uuid, ShareCursor::ConnectionState state);
     void controlledByUuid(const QUuid &uuid);
     void remoteCursorPosition(const QUuid &uuid, const QPoint &pos);
+
     void cursorPosition(const QPoint &pos);
     void cursorDelta(const QPoint &pos);
+    void keyboardEvent(int keycode, bool state);
+    void mouseEvent(int button, bool state);
+    void wheelEvent(int delta);
 
 private slots:
     void onSocketConnected(qintptr socketDescriptor);

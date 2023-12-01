@@ -11,7 +11,9 @@ public:
 public slots:
     void setCutsorPosition(const QPoint &pos);
     void setCutsorDelta(const QPoint &pos);
-
+    void setKeyboardEvent(int keycode, bool state);
+    void setMouseEvent(int button, bool state);
+    void setWheelEvent(int delta);
 signals:
 
 };
