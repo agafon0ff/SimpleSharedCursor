@@ -1,6 +1,9 @@
 QT += core gui widgets network
 
 CONFIG += c++17
+CONFIG += lrelease
+CONFIG += embed_translations
+
 TEMPLATE = app
 QMAKE_LFLAGS += -no-pie
 QMAKE_CXXFLAGS_RELEASE += -O3
@@ -58,9 +61,6 @@ RESOURCES += \
 
 TRANSLATIONS += \
     tr/ShareCursor_en.ts
-
-CONFIG += lrelease
-CONFIG += embed_translations
 
 LIBS += -lcrypto
 
