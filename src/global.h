@@ -7,11 +7,11 @@
 #include <QUuid>
 #include <QRect>
 
-namespace ShareCursor
+namespace SharedCursor
 {
     inline const char* CONFIG_PATH = "config.json";
     inline const char* GEOMETRY_PATH = "geometry.json";
-    inline const char* PROGRAM_NAME = "ShareCursor";
+    inline const char* PROGRAM_NAME = "SimpleSharedCursor";
 
     inline const char* KEY_SEARCH_REQUEST = "searchRequest";
     inline const char* KEY_SEARCH_RESPONSE = "searchResponse";

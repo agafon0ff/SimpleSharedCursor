@@ -27,7 +27,7 @@ signals:
     void deviceFound(const QJsonObject& jObject);
 
 private:
-    quint16 port = ShareCursor::DEFAULT_UDP_PORT;
+    quint16 port = SharedCursor::DEFAULT_UDP_PORT;
     QString uuid;
     QUdpSocket udpSocket;
     OpenSslWrapper sslWraper;

@@ -33,7 +33,7 @@ signals:
     void started();
     void finished();
 
-    void deviceConnectionChanged(const QUuid &uuid, ShareCursor::ConnectionState state);
+    void deviceConnectionChanged(const QUuid &uuid, SharedCursor::ConnectionState state);
     void controlledByUuid(const QUuid &uuid);
     void remoteCursorPosition(const QUuid &uuid, const QPoint &pos);
 
@@ -48,16 +48,17 @@ private slots:
     void onMessageReceived(const QUuid &uuid, const QJsonObject &json);
 
 private:
+    bool isSending = false;
     QUuid _uuid;
     QString _keyword;
     QJsonObject jsonMessage;
-    quint16 _port = ShareCursor::DEFAULT_TCP_PORT;
+    quint16 _port = SharedCursor::DEFAULT_TCP_PORT;
     QMap<QUuid, QSharedPointer<TcpSocket>> devices;
     QVector<QSharedPointer<TcpSocket>> tempSockets;
     QSharedPointer<TcpServer> server;
 
-    QJsonObject devicePtrToJsonObject(QSharedPointer<ShareCursor::Device> device);
-    QSharedPointer<ShareCursor::Device> jsonObjectToDevicePtr(const QJsonObject &obj);
+    QJsonObject devicePtrToJsonObject(QSharedPointer<SharedCursor::Device> device);
+    QSharedPointer<SharedCursor::Device> jsonObjectToDevicePtr(const QJsonObject &obj);
     QSharedPointer<TcpSocket> createTempSocket();
     QSharedPointer<TcpSocket> popTempSocket(TcpSocket* socket);
 };

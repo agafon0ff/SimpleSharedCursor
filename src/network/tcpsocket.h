@@ -52,7 +52,7 @@ public slots:
 private:
     QUuid uuid;
     QHostAddress host;
-    quint16 port = ShareCursor::DEFAULT_TCP_PORT;
+    quint16 port = SharedCursor::DEFAULT_TCP_PORT;
     bool _isConnected = false;
     QByteArray dataIn, dataInDec;
     QByteArray dataOut, dataOutEnc;

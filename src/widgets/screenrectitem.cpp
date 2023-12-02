@@ -32,7 +32,7 @@ void ScreenRectItem::setText(const QString &text)
     update();
 }
 
-void ScreenRectItem::addTransit(ShareCursor::Transit transit)
+void ScreenRectItem::addTransit(SharedCursor::Transit transit)
 {
     _transits.append(transit);
     update();
@@ -44,7 +44,7 @@ void ScreenRectItem::clearTransits()
     update();
 }
 
-QVector<ShareCursor::Transit> ScreenRectItem::transits() const
+QVector<SharedCursor::Transit> ScreenRectItem::transits() const
 {
     return _transits;
 }

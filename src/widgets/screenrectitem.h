@@ -17,9 +17,9 @@ public:
     QString text() const;
     void setText(const QString &text);
 
-    void addTransit(ShareCursor::Transit transit);
+    void addTransit(SharedCursor::Transit transit);
     void clearTransits();
-    QVector<ShareCursor::Transit> transits() const;
+    QVector<SharedCursor::Transit> transits() const;
 
     qreal width() const;
     qreal height() const;
@@ -36,7 +36,7 @@ private:
     QFont _font;
     QString _text;
     bool _isSelected = false;
-    QVector<ShareCursor::Transit> _transits;
+    QVector<SharedCursor::Transit> _transits;
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;

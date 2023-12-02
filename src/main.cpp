@@ -22,15 +22,15 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     qRegisterMetaType<QHostAddress>("QHostAddress");
-    qRegisterMetaType<ShareCursor::Device>("ShareCursor::Device");
-    qRegisterMetaType<ShareCursor::ConnectionState>("ShareCursor::ConnectionState");
-    qRegisterMetaType<QSharedPointer<ShareCursor::Device>>("QSharedPointer<ShareCursor::Device>");
-    qRegisterMetaType<QMap<QUuid,QVector<ShareCursor::Transit>> >("QMap<QUuid,QVector<ShareCursor::Transit> >");
+    qRegisterMetaType<SharedCursor::Device>("SharedCursor::Device");
+    qRegisterMetaType<SharedCursor::ConnectionState>("SharedCursor::ConnectionState");
+    qRegisterMetaType<QSharedPointer<SharedCursor::Device>>("QSharedPointer<SharedCursor::Device>");
+    qRegisterMetaType<QMap<QUuid,QVector<SharedCursor::Transit>> >("QMap<QUuid,QVector<SharedCursor::Transit> >");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {
-        const QString baseName = "ShareCursor_" + QLocale(locale).name();
+        const QString baseName = "SimpleSharedCursor_" + QLocale(locale).name();
         if (translator.load(":/i18n/" + baseName)) {
             a.installTranslator(&translator);
             break;
@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
     Settings.loadFacadeProperties();
 
     InputHandler inputHandler;
-    inputHandler.resize(500, 500);
-    inputHandler.setCenterIn(Settings.screenCenter());
+    inputHandler.setGeometry(Settings.screenRect().adjusted(50, 50, -50, -50));
+    inputHandler.setCenterIn(Settings.screenRect().center());
 
     InputSimulator inputSimulator;
 
     CursorHandler cursorHandler;
-    cursorHandler.setHoldCursorPosition(Settings.screenCenter());
+    cursorHandler.setHoldCursorPosition(Settings.screenRect().center());
 
     QThread cursorCheckerThread;
     QObject::connect(&cursorCheckerThread, &QThread::started, &cursorHandler, &CursorHandler::start);

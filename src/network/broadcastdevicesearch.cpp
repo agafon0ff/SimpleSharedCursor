@@ -40,8 +40,8 @@ void BroadcastDeviceSearch::search()
 {
     qDebug() << Q_FUNC_INFO;
 
-    ShareCursor::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_SEARCH_REQUEST);
-    ShareCursor::convertJsonToArray(jsonOut, datagram);
+    SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_SEARCH_REQUEST);
+    SharedCursor::convertJsonToArray(jsonOut, datagram);
     sslWraper.encrypt(datagram, datagramEnc);
     udpSocket.writeDatagram(datagramEnc, QHostAddress::Broadcast, port);
 }
@@ -81,15 +81,15 @@ void BroadcastDeviceSearch::onSocketReadyRead()
 void BroadcastDeviceSearch::onNewData(const QHostAddress &host, quint16 port, const QByteArray &data)
 {
     sslWraper.decrypt(data, datagram);
-    if (!ShareCursor::convertArrayToJson(datagram, jsonIn)) return;
+    if (!SharedCursor::convertArrayToJson(datagram, jsonIn)) return;
 
     qDebug() << Q_FUNC_INFO << host << port << jsonIn;
-    QString type = jsonIn.value(ShareCursor::KEY_TYPE).toString();
-    jsonIn.insert(ShareCursor::KEY_HOST, QHostAddress(host.toIPv4Address()).toString());
+    QString type = jsonIn.value(SharedCursor::KEY_TYPE).toString();
+    jsonIn.insert(SharedCursor::KEY_HOST, QHostAddress(host.toIPv4Address()).toString());
 
-    if (type == ShareCursor::KEY_SEARCH_REQUEST)
+    if (type == SharedCursor::KEY_SEARCH_REQUEST)
         handleSearchRequest(host, jsonIn);
-    else if (type == ShareCursor::KEY_SEARCH_RESPONSE)
+    else if (type == SharedCursor::KEY_SEARCH_RESPONSE)
         handleSearchResponse(jsonIn);
 
     Q_UNUSED(port);
@@ -99,15 +99,15 @@ void BroadcastDeviceSearch::handleSearchRequest(const QHostAddress &host, const 
 {
     qDebug() << Q_FUNC_INFO;
 
-    if (!jObject.contains(ShareCursor::KEY_UUID) ||
-        !jObject.contains(ShareCursor::KEY_NAME))
+    if (!jObject.contains(SharedCursor::KEY_UUID) ||
+        !jObject.contains(SharedCursor::KEY_NAME))
         return;
 
-    if (uuid == jObject.value(ShareCursor::KEY_UUID).toString())
+    if (uuid == jObject.value(SharedCursor::KEY_UUID).toString())
         return;
 
-    ShareCursor::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_SEARCH_RESPONSE);
-    ShareCursor::convertJsonToArray(jsonOut, datagram);
+    SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_SEARCH_RESPONSE);
+    SharedCursor::convertJsonToArray(jsonOut, datagram);
 
     sslWraper.encrypt(datagram, datagramEnc);
     udpSocket.writeDatagram(datagramEnc, host, port);
@@ -118,7 +118,7 @@ void BroadcastDeviceSearch::handleSearchResponse(const QJsonObject &jObject)
 {
     qDebug() << Q_FUNC_INFO;
 
-    if (jObject.contains(ShareCursor::KEY_UUID) &&
-        jObject.contains(ShareCursor::KEY_NAME))
+    if (jObject.contains(SharedCursor::KEY_UUID) &&
+        jObject.contains(SharedCursor::KEY_NAME))
         emit deviceFound(jObject);
 }

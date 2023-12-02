@@ -13,7 +13,7 @@
 #include "global.h"
 #include "settingsfacade.h"
 
-namespace ShareCursor {
+namespace SharedCursor {
 
 inline bool convertArrayToJson(const QByteArray &data, QJsonObject &result)
 {
@@ -72,10 +72,10 @@ inline QVector<QRect> jsonValueToRectList(const QJsonValue &jValue)
     return result;
 }
 
-inline QJsonValue transitListToJsonValue(const QVector<ShareCursor::Transit> &list)
+inline QJsonValue transitListToJsonValue(const QVector<SharedCursor::Transit> &list)
 {
     QJsonArray result;
-    for (const ShareCursor::Transit &transit: list) {
+    for (const SharedCursor::Transit &transit: list) {
         QJsonObject obj;
         obj.insert("lineX1", transit.line.x1());
         obj.insert("lineY1", transit.line.y1());
@@ -89,9 +89,9 @@ inline QJsonValue transitListToJsonValue(const QVector<ShareCursor::Transit> &li
     return result;
 }
 
-inline QVector<ShareCursor::Transit> jsonValueToTransitList(const QJsonValue &jValue)
+inline QVector<SharedCursor::Transit> jsonValueToTransitList(const QJsonValue &jValue)
 {
-    QVector<ShareCursor::Transit> result;
+    QVector<SharedCursor::Transit> result;
     QJsonArray arr = jValue.toArray();
     for (const QJsonValue &value: arr) {
         const QJsonObject &obj = value.toObject();
@@ -114,10 +114,10 @@ inline QVector<ShareCursor::Transit> jsonValueToTransitList(const QJsonValue &jV
 
 inline void fillDeviceJsonMessage(QJsonObject &jsonOut, const char* type)
 {
-    jsonOut.insert(ShareCursor::KEY_TYPE, type);
-    jsonOut.insert(ShareCursor::KEY_NAME, Settings.name());
-    jsonOut.insert(ShareCursor::KEY_UUID, Settings.uuid().toString());
-    jsonOut.insert(ShareCursor::KEY_SCREENS, rectListToJsonValue(Settings.screens()));
+    jsonOut.insert(SharedCursor::KEY_TYPE, type);
+    jsonOut.insert(SharedCursor::KEY_NAME, Settings.name());
+    jsonOut.insert(SharedCursor::KEY_UUID, Settings.uuid().toString());
+    jsonOut.insert(SharedCursor::KEY_SCREENS, rectListToJsonValue(Settings.screens()));
 }
 
 };

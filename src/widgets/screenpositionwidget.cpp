@@ -24,7 +24,7 @@ QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
     return items;
 }
 
-void ScreenPositionWidget::addDevice(QSharedPointer<ShareCursor::Device> device)
+void ScreenPositionWidget::addDevice(QSharedPointer<SharedCursor::Device> device)
 {
     for (const QRect &rect: qAsConst(device->screens)) {
         ScreenRectItem *item = createRect(rect, device->position);

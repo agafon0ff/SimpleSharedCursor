@@ -1,4 +1,5 @@
 #include <QCursor>
+#include <QDebug>
 #include "inputsimulator.h"
 
 #ifdef Q_OS_WIN
@@ -15,7 +16,6 @@
 InputSimulator::InputSimulator(QObject *parent)
     : QObject{parent}
 {
-
 }
 
 void InputSimulator::setCutsorPosition(const QPoint &pos)
@@ -35,14 +35,11 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
     Display *display;
     display = XOpenDisplay(Q_NULLPTR);
 
-//    unsigned int code = XKeysymToKeycode(display, keycode);
-    unsigned int code = keycode;
-
     if (state) {
-        XTestFakeKeyEvent(display, code, True, 0);
+        XTestFakeKeyEvent(display, keycode, True, 0);
     }
     else {
-        XTestFakeKeyEvent(display, code, False, 0);
+        XTestFakeKeyEvent(display, keycode, False, 0);
     }
 
     XFlush(display);

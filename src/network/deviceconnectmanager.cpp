@@ -1,7 +1,6 @@
 #include <QJsonArray>
 
 #include "deviceconnectmanager.h"
-#include "settingsfacade.h"
 #include "utils.h"
 
 DeviceConnectManager::DeviceConnectManager(QObject *parent)
@@ -91,15 +90,24 @@ void DeviceConnectManager::connectToDevice(const QUuid &uuid, const QHostAddress
     socket->setPort(_port);
     socket->start();
 
-    emit deviceConnectionChanged(uuid, ShareCursor::Waiting);
+    emit deviceConnectionChanged(uuid, SharedCursor::Waiting);
 }
 
 void DeviceConnectManager::sendMessage(const QUuid &uuid, const QJsonObject &json)
 {
+    if (isSending) {
+        qDebug() << Q_FUNC_INFO << "!! is sending !!";
+        return;
+    }
+
+    isSending = true;
+
     auto it = devices.find(uuid);
     if (it != devices.end()) {
         it.value()->sendMessage(json);
     }
+
+    isSending = false;
 }
 
 void DeviceConnectManager::handleRemoveDevice(const QUuid &uuid)
@@ -115,7 +123,7 @@ void DeviceConnectManager::handleDeviceConnected(TcpSocket *socket, const QJsonO
 {
     qDebug() << Q_FUNC_INFO;
 
-    QUuid uuid = QUuid::fromString(json.value(ShareCursor::KEY_UUID).toString());
+    QUuid uuid = QUuid::fromString(json.value(SharedCursor::KEY_UUID).toString());
     QSharedPointer<TcpSocket> socketPtr = popTempSocket(socket);
 
     if (socketPtr.isNull())
@@ -128,7 +136,7 @@ void DeviceConnectManager::handleDeviceConnected(TcpSocket *socket, const QJsonO
         devices.insert(uuid, socketPtr);
     }
 
-    emit deviceConnectionChanged(uuid, ShareCursor::Connected);
+    emit deviceConnectionChanged(uuid, SharedCursor::Connected);
 }
 
 void DeviceConnectManager::handleDeviceDisconnected(TcpSocket *socket)
@@ -147,7 +155,7 @@ void DeviceConnectManager::handleDeviceDisconnected(TcpSocket *socket)
         disconnect(socket.get(), &TcpSocket::deviceDisconnected, this, &DeviceConnectManager::handleDeviceDisconnected);
         disconnect(socket.get(), &TcpSocket::message, this, &DeviceConnectManager::onMessageReceived);
 
-        emit deviceConnectionChanged(uuid, ShareCursor::Disconnected);
+        emit deviceConnectionChanged(uuid, SharedCursor::Disconnected);
         it.value().clear();
     }
     else {
@@ -164,64 +172,64 @@ void DeviceConnectManager::onSocketConnected(qintptr socketDescriptor)
 
 void DeviceConnectManager::onMessageReceived(const QUuid &uuid, const QJsonObject &json)
 {
-    const QString &type = json.value(ShareCursor::KEY_TYPE).toString();
+    const QString &type = json.value(SharedCursor::KEY_TYPE).toString();
 
-    if (type == ShareCursor::KEY_REMOTE_CONTROL) {
-        if (json.value(ShareCursor::KEY_STATE).toBool()) {
-            const QJsonValue &value = json.value(ShareCursor::KEY_CURSOR_POS);
+    if (type == SharedCursor::KEY_REMOTE_CONTROL) {
+        if (json.value(SharedCursor::KEY_STATE).toBool()) {
+            const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_POS);
             emit controlledByUuid(uuid);
-            emit cursorPosition(ShareCursor::jsonValueToPoint(value));
+            emit cursorPosition(SharedCursor::jsonValueToPoint(value));
         } else {
             emit controlledByUuid(_uuid);
         }
     }
-    else if (type == ShareCursor::KEY_CURSOR_POS) {
-        const QJsonValue &value = json.value(ShareCursor::KEY_CURSOR_POS);
-        emit remoteCursorPosition(uuid, ShareCursor::jsonValueToPoint(value));
+    else if (type == SharedCursor::KEY_CURSOR_POS) {
+        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_POS);
+        emit remoteCursorPosition(uuid, SharedCursor::jsonValueToPoint(value));
     }
-    else if (type == ShareCursor::KEY_CURSOR_DELTA) {
-        const QJsonValue &value = json.value(ShareCursor::KEY_CURSOR_DELTA);
-        emit cursorDelta(ShareCursor::jsonValueToPoint(value));
+    else if (type == SharedCursor::KEY_CURSOR_DELTA) {
+        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_DELTA);
+        emit cursorDelta(SharedCursor::jsonValueToPoint(value));
     }
-    else if (type == ShareCursor::KEY_CURSOR_DELTA) {
-        const QJsonValue &value = json.value(ShareCursor::KEY_CURSOR_DELTA);
-        emit cursorDelta(ShareCursor::jsonValueToPoint(value));
+    else if (type == SharedCursor::KEY_CURSOR_DELTA) {
+        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_DELTA);
+        emit cursorDelta(SharedCursor::jsonValueToPoint(value));
     }
-    else if (type == ShareCursor::KEY_INPUT) {
-        const QJsonValue &inputType = json.value(ShareCursor::KEY_INPUT);
-        int value = json.value(ShareCursor::KEY_VALUE).toInt();
+    else if (type == SharedCursor::KEY_INPUT) {
+        const QJsonValue &inputType = json.value(SharedCursor::KEY_INPUT);
+        int value = json.value(SharedCursor::KEY_VALUE).toInt();
 
-        if (inputType == ShareCursor::KEY_KEYBOARD) {
-            emit keyboardEvent(value, json.value(ShareCursor::KEY_PRESSED).toBool());
+        if (inputType == SharedCursor::KEY_KEYBOARD) {
+            emit keyboardEvent(value, json.value(SharedCursor::KEY_PRESSED).toBool());
         }
-        else if (inputType == ShareCursor::KEY_MOUSE) {
-            emit mouseEvent(value, json.value(ShareCursor::KEY_PRESSED).toBool());
+        else if (inputType == SharedCursor::KEY_MOUSE) {
+            emit mouseEvent(value, json.value(SharedCursor::KEY_PRESSED).toBool());
         }
-        else if (inputType == ShareCursor::KEY_WHEEL) {
+        else if (inputType == SharedCursor::KEY_WHEEL) {
             emit wheelEvent(value);
         }
     }
 }
 
-QJsonObject DeviceConnectManager::devicePtrToJsonObject(QSharedPointer<ShareCursor::Device> device)
+QJsonObject DeviceConnectManager::devicePtrToJsonObject(QSharedPointer<SharedCursor::Device> device)
 {
     QJsonObject result;
-    result.insert(ShareCursor::KEY_UUID, device->uuid.toString());
-    result.insert(ShareCursor::KEY_NAME, device->name);
-    result.insert(ShareCursor::KEY_HOST, QHostAddress(device->host.toIPv4Address()).toString());
-    result.insert(ShareCursor::KEY_SELF, device->self);
-    result.insert(ShareCursor::KEY_SCREENS, ShareCursor::rectListToJsonValue(device->screens));
+    result.insert(SharedCursor::KEY_UUID, device->uuid.toString());
+    result.insert(SharedCursor::KEY_NAME, device->name);
+    result.insert(SharedCursor::KEY_HOST, QHostAddress(device->host.toIPv4Address()).toString());
+    result.insert(SharedCursor::KEY_SELF, device->self);
+    result.insert(SharedCursor::KEY_SCREENS, SharedCursor::rectListToJsonValue(device->screens));
     return result;
 }
 
-QSharedPointer<ShareCursor::Device> DeviceConnectManager::jsonObjectToDevicePtr(const QJsonObject &obj)
+QSharedPointer<SharedCursor::Device> DeviceConnectManager::jsonObjectToDevicePtr(const QJsonObject &obj)
 {
-    QSharedPointer<ShareCursor::Device> device = QSharedPointer<ShareCursor::Device>(new ShareCursor::Device);
-    device->uuid = QUuid::fromString(obj.value(ShareCursor::KEY_UUID).toString());
-    device->name = obj.value(ShareCursor::KEY_NAME).toString();
-    device->host = QHostAddress(obj.value(ShareCursor::KEY_HOST).toString());
+    QSharedPointer<SharedCursor::Device> device = QSharedPointer<SharedCursor::Device>(new SharedCursor::Device);
+    device->uuid = QUuid::fromString(obj.value(SharedCursor::KEY_UUID).toString());
+    device->name = obj.value(SharedCursor::KEY_NAME).toString();
+    device->host = QHostAddress(obj.value(SharedCursor::KEY_HOST).toString());
     device->self = device->uuid == _uuid;
-    device->screens = ShareCursor::jsonValueToRectList(obj.value(ShareCursor::KEY_SCREENS));
+    device->screens = SharedCursor::jsonValueToRectList(obj.value(SharedCursor::KEY_SCREENS));
     return device;
 }
 
