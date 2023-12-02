@@ -23,7 +23,7 @@ public:
 
     void setName(const QString& name);
     void setHost(const QHostAddress& host);
-    void setState(ShareCursor::ConnectionState state);
+    void setState(SharedCursor::ConnectionState state);
 
 signals:
     void removeClicked(const QUuid &uuid);
@@ -31,5 +31,5 @@ signals:
 private:
     Ui::DeviceItemWidget *ui;
     QUuid uuid;
-    ShareCursor::ConnectionState state = ShareCursor::Unknown;
+    SharedCursor::ConnectionState state = SharedCursor::Unknown;
 };

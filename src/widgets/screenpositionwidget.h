@@ -18,7 +18,7 @@ public:
     QVector<ScreenRectItem*> screenRectItems() const;
 
 public slots:
-    void addDevice(QSharedPointer<ShareCursor::Device> device);
+    void addDevice(QSharedPointer<SharedCursor::Device> device);
     void removeDevice(const QUuid &uuid);
     void clearWidget();
     void normalize();

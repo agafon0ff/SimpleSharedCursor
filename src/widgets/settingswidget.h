@@ -26,7 +26,7 @@ public:
     void clearWidget();
 
 public slots:
-    void setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state);
+    void setDeviceConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state);
 
 signals:
     void findDevices();
@@ -34,7 +34,7 @@ signals:
     void keywordChanged(const QString &key);
     void removeDevice(const QUuid &uuid);
     void screenPositionChanged(const QUuid &uuid, const QPoint &pos);
-    void transitsChanged(const QMap<QUuid, QVector<ShareCursor::Transit>> &transits);
+    void transitsChanged(const QMap<QUuid, QVector<SharedCursor::Transit>> &transits);
 
 private:
     Ui::SettingsWidget *ui;
@@ -44,7 +44,7 @@ private:
     JsonLoader geometryLoader;
     QVector<QUuid> removeList;
 
-    void createFoundDeviceWidget(QSharedPointer<ShareCursor::Device> device);
+    void createFoundDeviceWidget(QSharedPointer<SharedCursor::Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);
     void onBtnOkClicked();
     void onBtnCancelClicked();

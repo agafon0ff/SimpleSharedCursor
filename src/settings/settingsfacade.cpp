@@ -48,24 +48,24 @@ QVector<QRect> SettingsFacade::screens()
     return result;
 }
 
-QPoint SettingsFacade::screenCenter()
+QRect SettingsFacade::screenRect()
 {
-    return QGuiApplication::primaryScreen()->geometry().center();
+    return QGuiApplication::primaryScreen()->geometry();
 }
 
-QSharedPointer<ShareCursor::Device> SettingsFacade::device(const QUuid &uuid) const
+QSharedPointer<SharedCursor::Device> SettingsFacade::device(const QUuid &uuid) const
 {
     return _devices.value(uuid);
 }
 
-QMap<QUuid, QSharedPointer<ShareCursor::Device> > SettingsFacade::devices() const
+QMap<QUuid, QSharedPointer<SharedCursor::Device> > SettingsFacade::devices() const
 {
     return _devices;
 }
 
-QMap<QUuid, QVector<ShareCursor::Transit> > SettingsFacade::transits() const
+QMap<QUuid, QVector<SharedCursor::Transit> > SettingsFacade::transits() const
 {
-    QMap<QUuid, QVector<ShareCursor::Transit>> result;
+    QMap<QUuid, QVector<SharedCursor::Transit>> result;
     auto i = _devices.constBegin();
     while (i != _devices.constEnd()) {
         auto &device = i.value();
@@ -81,16 +81,16 @@ void SettingsFacade::save()
 
     saveDevices();
     saveFacadeProperties();
-    _loader.save(ShareCursor::CONFIG_PATH);
+    _loader.save(SharedCursor::CONFIG_PATH);
 }
 
 void SettingsFacade::loadDevices()
 {
     qDebug() << Q_FUNC_INFO;
 
-    const QJsonObject &jsonDevices = _loader.value(ShareCursor::KEY_DEVICES).toObject();
+    const QJsonObject &jsonDevices = _loader.value(SharedCursor::KEY_DEVICES).toObject();
     for (auto it=jsonDevices.constBegin(); it != jsonDevices.constEnd(); ++it) {
-        QSharedPointer<ShareCursor::Device> device = jsonObjectToDevicePtr(it.value().toObject());
+        QSharedPointer<SharedCursor::Device> device = jsonObjectToDevicePtr(it.value().toObject());
         _devices.insert(device->uuid, device);
         emit deviceFound(device->uuid, device->host);
     }
@@ -98,11 +98,11 @@ void SettingsFacade::loadDevices()
 
 void SettingsFacade::loadFacadeProperties()
 {
-    _uuid = QUuid::fromString(_loader.value(ShareCursor::KEY_UUID).toString());
-    _name = _loader.value(ShareCursor::KEY_NAME, QHostInfo::localHostName()).toString();
-    _keyword = _loader.value(ShareCursor::KEY_KEYWORD, QHostInfo::localHostName()).toString();
-    _portTcp = _loader.value(ShareCursor::KEY_PORT_TCP, ShareCursor::DEFAULT_TCP_PORT).toInt();
-    _portUdp = _loader.value(ShareCursor::KEY_PORT_UDP, ShareCursor::DEFAULT_UDP_PORT).toInt();
+    _uuid = QUuid::fromString(_loader.value(SharedCursor::KEY_UUID).toString());
+    _name = _loader.value(SharedCursor::KEY_NAME, QHostInfo::localHostName()).toString();
+    _keyword = _loader.value(SharedCursor::KEY_KEYWORD, QHostInfo::localHostName()).toString();
+    _portTcp = _loader.value(SharedCursor::KEY_PORT_TCP, SharedCursor::DEFAULT_TCP_PORT).toInt();
+    _portUdp = _loader.value(SharedCursor::KEY_PORT_UDP, SharedCursor::DEFAULT_UDP_PORT).toInt();
 }
 
 void SettingsFacade::setName(const QString &name)
@@ -127,7 +127,7 @@ void SettingsFacade::setPortUdp(quint16 port)
 
 void SettingsFacade::setDevice(const QJsonObject &obj)
 {
-    const QUuid &uuid = QUuid::fromString(obj.value(ShareCursor::KEY_UUID).toString());
+    const QUuid &uuid = QUuid::fromString(obj.value(SharedCursor::KEY_UUID).toString());
     if (uuid.isNull())
         return;
 
@@ -135,7 +135,7 @@ void SettingsFacade::setDevice(const QJsonObject &obj)
         fillDeviceProperties(_devices[uuid], obj);
     }
     else {
-        QSharedPointer<ShareCursor::Device> device = jsonObjectToDevicePtr(obj);
+        QSharedPointer<SharedCursor::Device> device = jsonObjectToDevicePtr(obj);
         _devices.insert(uuid, device);
         emit deviceFound(uuid, device->host);
     }
@@ -156,7 +156,7 @@ void SettingsFacade::setDevicePosition(const QUuid &uuid, const QPoint &pos)
     _devices.value(uuid)->position = pos;
 }
 
-void SettingsFacade::setDeviceConnectionState(const QUuid &uuid, ShareCursor::ConnectionState state)
+void SettingsFacade::setDeviceConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state)
 {
     if (!_devices.contains(uuid))
         return;
@@ -173,7 +173,7 @@ void SettingsFacade::clearTransits()
     }
 }
 
-void SettingsFacade::setTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits)
+void SettingsFacade::setTransitsToDevice(const QUuid &uuid, const QVector<SharedCursor::Transit> &transits)
 {
     if (!_devices.contains(uuid))
         return;
@@ -181,7 +181,7 @@ void SettingsFacade::setTransitsToDevice(const QUuid &uuid, const QVector<ShareC
     _devices.value(uuid)->transits = transits;
 }
 
-void SettingsFacade::addTransitsToDevice(const QUuid &uuid, const QVector<ShareCursor::Transit> &transits)
+void SettingsFacade::addTransitsToDevice(const QUuid &uuid, const QVector<SharedCursor::Transit> &transits)
 {
     if (!_devices.contains(uuid))
         return;
@@ -209,89 +209,89 @@ void SettingsFacade::saveDevices()
         ++i;
     }
 
-    _loader.setValue(ShareCursor::KEY_DEVICES, jsonDevices);
+    _loader.setValue(SharedCursor::KEY_DEVICES, jsonDevices);
 }
 
 void SettingsFacade::saveSelfDevice()
 {
-    QString strUuid = _loader.value(ShareCursor::KEY_UUID).toString();
+    QString strUuid = _loader.value(SharedCursor::KEY_UUID).toString();
 
     if (strUuid.isEmpty()) {
         strUuid = QUuid::createUuid().toString();
-        _loader.setValue(ShareCursor::KEY_UUID, strUuid);
+        _loader.setValue(SharedCursor::KEY_UUID, strUuid);
     }
 
-    QJsonObject devices = _loader.value(ShareCursor::KEY_DEVICES).toObject();
+    QJsonObject devices = _loader.value(SharedCursor::KEY_DEVICES).toObject();
     if (devices.contains(strUuid))
         return;
 
     QJsonObject device;
-    device.insert(ShareCursor::KEY_UUID, QUuid::createUuid().toString());
-    device.insert(ShareCursor::KEY_NAME, QHostInfo::localHostName());
-    device.insert(ShareCursor::KEY_HOST, "127.0.0.1");
-    device.insert(ShareCursor::KEY_SELF, true);
-    device.insert(ShareCursor::KEY_UUID, strUuid);
-    device.insert(ShareCursor::KEY_SCREENS, ShareCursor::rectListToJsonValue(screens()));
-    device.insert(ShareCursor::KEY_POSITION, ShareCursor::pointToJsonValue(QPoint(0, 0)));
+    device.insert(SharedCursor::KEY_UUID, QUuid::createUuid().toString());
+    device.insert(SharedCursor::KEY_NAME, QHostInfo::localHostName());
+    device.insert(SharedCursor::KEY_HOST, "127.0.0.1");
+    device.insert(SharedCursor::KEY_SELF, true);
+    device.insert(SharedCursor::KEY_UUID, strUuid);
+    device.insert(SharedCursor::KEY_SCREENS, SharedCursor::rectListToJsonValue(screens()));
+    device.insert(SharedCursor::KEY_POSITION, SharedCursor::pointToJsonValue(QPoint(0, 0)));
 
     devices.insert(strUuid, device);
-    _loader.setValue(ShareCursor::KEY_DEVICES, devices);
+    _loader.setValue(SharedCursor::KEY_DEVICES, devices);
 }
 
 void SettingsFacade::saveFacadeProperties()
 {
-    _loader.setValue(ShareCursor::KEY_UUID, _uuid.toString());
-    _loader.setValue(ShareCursor::KEY_NAME, _name);
-    _loader.setValue(ShareCursor::KEY_KEYWORD, _keyword);
-    _loader.setValue(ShareCursor::KEY_PORT_TCP, _portTcp);
-    _loader.setValue(ShareCursor::KEY_PORT_UDP, _portUdp);
+    _loader.setValue(SharedCursor::KEY_UUID, _uuid.toString());
+    _loader.setValue(SharedCursor::KEY_NAME, _name);
+    _loader.setValue(SharedCursor::KEY_KEYWORD, _keyword);
+    _loader.setValue(SharedCursor::KEY_PORT_TCP, _portTcp);
+    _loader.setValue(SharedCursor::KEY_PORT_UDP, _portUdp);
 }
 
-QJsonObject SettingsFacade::devicePtrToJsonObject(QSharedPointer<ShareCursor::Device> device)
+QJsonObject SettingsFacade::devicePtrToJsonObject(QSharedPointer<SharedCursor::Device> device)
 {
     QJsonObject result;
-    result.insert(ShareCursor::KEY_UUID, device->uuid.toString());
-    result.insert(ShareCursor::KEY_NAME, device->name);
-    result.insert(ShareCursor::KEY_HOST, QHostAddress(device->host.toIPv4Address()).toString());
-    result.insert(ShareCursor::KEY_SELF, device->self);
-    result.insert(ShareCursor::KEY_SCREENS, ShareCursor::rectListToJsonValue(device->screens));
-    result.insert(ShareCursor::KEY_POSITION, ShareCursor::pointToJsonValue(device->position));
-    result.insert(ShareCursor::KEY_TRANSITS, ShareCursor::transitListToJsonValue(device->transits));
+    result.insert(SharedCursor::KEY_UUID, device->uuid.toString());
+    result.insert(SharedCursor::KEY_NAME, device->name);
+    result.insert(SharedCursor::KEY_HOST, QHostAddress(device->host.toIPv4Address()).toString());
+    result.insert(SharedCursor::KEY_SELF, device->self);
+    result.insert(SharedCursor::KEY_SCREENS, SharedCursor::rectListToJsonValue(device->screens));
+    result.insert(SharedCursor::KEY_POSITION, SharedCursor::pointToJsonValue(device->position));
+    result.insert(SharedCursor::KEY_TRANSITS, SharedCursor::transitListToJsonValue(device->transits));
     return result;
 }
 
-QSharedPointer<ShareCursor::Device> SettingsFacade::jsonObjectToDevicePtr(const QJsonObject &obj)
+QSharedPointer<SharedCursor::Device> SettingsFacade::jsonObjectToDevicePtr(const QJsonObject &obj)
 {
-    QSharedPointer<ShareCursor::Device> device = QSharedPointer<ShareCursor::Device>(new ShareCursor::Device);
+    QSharedPointer<SharedCursor::Device> device = QSharedPointer<SharedCursor::Device>(new SharedCursor::Device);
     fillDeviceProperties(device, obj);
     return device;
 }
 
-void SettingsFacade::fillDeviceProperties(QSharedPointer<ShareCursor::Device> device, const QJsonObject &obj)
+void SettingsFacade::fillDeviceProperties(QSharedPointer<SharedCursor::Device> device, const QJsonObject &obj)
 {
-    device->uuid = QUuid::fromString(obj.value(ShareCursor::KEY_UUID).toString());
+    device->uuid = QUuid::fromString(obj.value(SharedCursor::KEY_UUID).toString());
     device->self = device->uuid == _uuid;
-    device->name = obj.value(ShareCursor::KEY_NAME).toString(device->name);
+    device->name = obj.value(SharedCursor::KEY_NAME).toString(device->name);
 
-    if (obj.contains(ShareCursor::KEY_HOST)) {
-        device->host = QHostAddress(obj.value(ShareCursor::KEY_HOST).toString());
+    if (obj.contains(SharedCursor::KEY_HOST)) {
+        device->host = QHostAddress(obj.value(SharedCursor::KEY_HOST).toString());
     }
 
-    if (obj.contains(ShareCursor::KEY_SCREENS)) {
-        device->screens = ShareCursor::jsonValueToRectList(obj.value(ShareCursor::KEY_SCREENS));
+    if (obj.contains(SharedCursor::KEY_SCREENS)) {
+        device->screens = SharedCursor::jsonValueToRectList(obj.value(SharedCursor::KEY_SCREENS));
     }
 
-    if (obj.contains(ShareCursor::KEY_POSITION)) {
-        device->position = ShareCursor::jsonValueToPoint(obj.value(ShareCursor::KEY_POSITION));
+    if (obj.contains(SharedCursor::KEY_POSITION)) {
+        device->position = SharedCursor::jsonValueToPoint(obj.value(SharedCursor::KEY_POSITION));
     }
 
-    if (obj.contains(ShareCursor::KEY_TRANSITS)) {
-        device->transits = ShareCursor::jsonValueToTransitList(obj.value(ShareCursor::KEY_TRANSITS));
+    if (obj.contains(SharedCursor::KEY_TRANSITS)) {
+        device->transits = SharedCursor::jsonValueToTransitList(obj.value(SharedCursor::KEY_TRANSITS));
     }
 }
 
 SettingsFacade::SettingsFacade()
 {
-    _loader.load(ShareCursor::CONFIG_PATH, true);
+    _loader.load(SharedCursor::CONFIG_PATH, true);
     saveSelfDevice();
 }

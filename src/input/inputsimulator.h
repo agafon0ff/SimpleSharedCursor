@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QMap>
 
 class InputSimulator : public QObject
 {
@@ -14,6 +15,4 @@ public slots:
     void setKeyboardEvent(int keycode, bool state);
     void setMouseEvent(int button, bool state);
     void setWheelEvent(int delta);
-signals:
-
 };

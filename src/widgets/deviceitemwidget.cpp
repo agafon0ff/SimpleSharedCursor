@@ -35,20 +35,20 @@ void DeviceItemWidget::setHost(const QHostAddress &host)
     ui->labelHost->setText(QHostAddress(host.toIPv4Address()).toString());
 }
 
-void DeviceItemWidget::setState(ShareCursor::ConnectionState _state)
+void DeviceItemWidget::setState(SharedCursor::ConnectionState _state)
 {
     state = _state;
     switch(state) {
-    case ShareCursor::Unknown:
+    case SharedCursor::Unknown:
         ui->labelStatus->setText("?");
         break;
-    case ShareCursor::Disconnected:
+    case SharedCursor::Disconnected:
         ui->labelStatus->setText("-");
         break;
-    case ShareCursor::Connected:
+    case SharedCursor::Connected:
         ui->labelStatus->setText("+");
         break;
-    case ShareCursor::Waiting:
+    case SharedCursor::Waiting:
         ui->labelStatus->setText(".");
         break;
     }

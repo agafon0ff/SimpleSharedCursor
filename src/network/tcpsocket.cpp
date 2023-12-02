@@ -2,7 +2,6 @@
 #include <QDebug>
 
 #include "tcpsocket.h"
-#include "settingsfacade.h"
 #include "utils.h"
 
 TcpSocket::TcpSocket(QObject *parent)
@@ -88,7 +87,7 @@ void TcpSocket::stop()
 void TcpSocket::sendMessage(const QJsonObject &json)
 {
 //    qDebug() << Q_FUNC_INFO << uuid << json;
-    ShareCursor::convertJsonToArray(json, dataOut);
+    SharedCursor::convertJsonToArray(json, dataOut);
     sslWraper.encrypt(dataOut, dataOutEnc);
     write(dataOutEnc);
 }
@@ -99,7 +98,8 @@ void TcpSocket::onReadyRead()
     read(dataIn.data(), dataIn.size());
     sslWraper.decrypt(dataIn, dataInDec);
 
-    if (!ShareCursor::convertArrayToJson(dataInDec, jsonIn)) {
+    if (!SharedCursor::convertArrayToJson(dataInDec, jsonIn)) {
+        qDebug() << Q_FUNC_INFO << "ERROR: Json parsing!" << dataInDec;
         return;
     }
 
@@ -109,18 +109,18 @@ void TcpSocket::onReadyRead()
         emit message(uuid, jsonIn);
     }
     else {
-        if (!jsonIn.contains(ShareCursor::KEY_UUID)) {
+        if (!jsonIn.contains(SharedCursor::KEY_UUID)) {
             return;
         }
 
-        jsonIn.insert(ShareCursor::KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
-        messageType = jsonIn.value(ShareCursor::KEY_TYPE).toString();
+        jsonIn.insert(SharedCursor::KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
+        messageType = jsonIn.value(SharedCursor::KEY_TYPE).toString();
 
-        if (messageType == ShareCursor::KEY_CONNECT_REQUEST) {
+        if (messageType == SharedCursor::KEY_CONNECT_REQUEST) {
             _isConnected = true;
             onConnectRequestReceived();
         }
-        else if (messageType == ShareCursor::KEY_CONNECT_RESPONSE) {
+        else if (messageType == SharedCursor::KEY_CONNECT_RESPONSE) {
             _isConnected = true;
             emit deviceConnected(this, jsonIn);
         }
@@ -129,8 +129,8 @@ void TcpSocket::onReadyRead()
 
 void TcpSocket::onConnected()
 {
-    ShareCursor::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_REQUEST);
-    ShareCursor::convertJsonToArray(jsonOut, dataOut);
+    SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_CONNECT_REQUEST);
+    SharedCursor::convertJsonToArray(jsonOut, dataOut);
     sslWraper.encrypt(dataOut, dataOutEnc);
     write(dataOutEnc);
 }
@@ -144,10 +144,10 @@ void TcpSocket::onDisconnected()
 void TcpSocket::onConnectRequestReceived()
 {
     if (uuid.isNull())
-        uuid = QUuid::fromString(jsonIn.value(ShareCursor::KEY_UUID).toString());
+        uuid = QUuid::fromString(jsonIn.value(SharedCursor::KEY_UUID).toString());
 
     emit deviceConnected(this, jsonIn);
 
-    ShareCursor::fillDeviceJsonMessage(jsonOut, ShareCursor::KEY_CONNECT_RESPONSE);
+    SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_CONNECT_RESPONSE);
     sendMessage(jsonOut);
 }
