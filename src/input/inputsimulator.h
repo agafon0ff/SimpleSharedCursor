@@ -15,4 +15,8 @@ public slots:
     void setKeyboardEvent(int keycode, bool state);
     void setMouseEvent(int button, bool state);
     void setWheelEvent(int delta);
+
+private:
+    QMap<int, quint8> keymap;
+    void createKeymap();
 };

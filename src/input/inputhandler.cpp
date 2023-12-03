@@ -83,7 +83,7 @@ bool InputHandler::event(QEvent *event)
 void InputHandler::keyStateChanged(QKeyEvent *event, bool pressed)
 {
     jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_KEYBOARD;
-    jsonKey[SharedCursor::KEY_VALUE] = static_cast<int>(event->nativeScanCode());
+    jsonKey[SharedCursor::KEY_VALUE] = static_cast<int>(event->key());
     jsonKey[SharedCursor::KEY_PRESSED] = pressed;
     emit message(remoteUuid, jsonKey);
 }
