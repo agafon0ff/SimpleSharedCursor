@@ -84,6 +84,7 @@ void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::Connecti
         if (uuid == transitUuid && state != SharedCursor::Connected) {
             controlState = SharedCursor::SelfControl;
             transitUuid = currentDeviceUuid;
+            currentTransits = transitsMap.value(transitUuid);
             sendRemoteControlMessage(false, {0, 0});
             emit controlRemoteDevice(currentDeviceUuid, false);
         }
@@ -92,6 +93,7 @@ void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::Connecti
         if (uuid == controlledByUuid && state != SharedCursor::Connected) {
             controlState = SharedCursor::SelfControl;
             transitUuid = currentDeviceUuid;
+            currentTransits = transitsMap.value(transitUuid);
         }
         break;
     }
