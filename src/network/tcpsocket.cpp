@@ -86,10 +86,17 @@ void TcpSocket::stop()
 
 void TcpSocket::sendMessage(const QJsonObject &json)
 {
+    if (_isSending) {
+        qDebug() << Q_FUNC_INFO << "ERROR: message isn't sent!" << json;
+        return;
+    }
 //    qDebug() << Q_FUNC_INFO << uuid << json;
+
+    _isSending = true;
     SharedCursor::convertJsonToArray(json, dataOut);
     sslWraper.encrypt(dataOut, dataOutEnc);
     write(dataOutEnc);
+    _isSending = false;
 }
 
 void TcpSocket::onReadyRead()

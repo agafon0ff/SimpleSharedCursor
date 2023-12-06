@@ -6,7 +6,7 @@ CONFIG += embed_translations
 
 TEMPLATE = app
 QMAKE_LFLAGS += -no-pie
-QMAKE_CXXFLAGS_RELEASE += -O3
+QMAKE_CXXFLAGS_RELEASE += -O2
 
 INCLUDEPATH += \
     src \
@@ -18,6 +18,7 @@ INCLUDEPATH += \
 SOURCES += \
     src/main.cpp \
     src/opensslwrapper.cpp \
+    src/input/clipboardhandler.cpp \
     src/input/cursorhandler.cpp \
     src/input/inputsimulator.cpp \
     src/input/inputhandler.cpp \
@@ -37,6 +38,7 @@ HEADERS += \
     src/global.h \
     src/utils.h \
     src/opensslwrapper.h \
+    src/input/clipboardhandler.h \
     src/input/cursorhandler.h \
     src/input/inputsimulator.h \
     src/input/inputhandler.h \

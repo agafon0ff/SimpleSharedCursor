@@ -54,6 +54,7 @@ private:
     QHostAddress host;
     quint16 port = SharedCursor::DEFAULT_TCP_PORT;
     bool _isConnected = false;
+    bool _isSending = false;
     QByteArray dataIn, dataInDec;
     QByteArray dataOut, dataOutEnc;
     QJsonObject jsonIn, jsonOut;

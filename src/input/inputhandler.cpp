@@ -19,24 +19,30 @@ InputHandler::InputHandler(QWidget *parent)
     jsonKey[SharedCursor::KEY_TYPE] = SharedCursor::KEY_INPUT;
 }
 
-void InputHandler::holdCursor(const QUuid &uuid, bool state)
+void InputHandler::setUuid(const QUuid &uuid)
 {
-    remoteUuid = uuid;
-    isActive = state;
+    ownUuid = uuid;
+}
 
-    if (state) {
+void InputHandler::setCenterIn(const QPoint &pos)
+{
+    move(pos.x() - width() / 2, pos.y() - height() / 2);
+}
+
+void InputHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
+{
+    remoteUuid = slave;
+
+    if (master != slave && master == ownUuid) {
+        isActive = true;
         show();
         setFocus();
         activateWindow();
     }
     else {
         hide();
+        isActive = false;
     }
-}
-
-void InputHandler::setCenterIn(const QPoint &pos)
-{
-    move(pos.x() - width() / 2, pos.y() - height() / 2);
 }
 
 bool InputHandler::event(QEvent *event)
