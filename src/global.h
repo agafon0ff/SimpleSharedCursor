@@ -39,6 +39,7 @@ namespace SharedCursor
     inline const char* KEY_TRANSITS = "transits";
     inline const char* KEY_CURSOR_DELTA = "delta";
     inline const char* KEY_CURSOR_POS = "cursorPos";
+    inline const char* KEY_INIT_CURSOR_POS = "initCursorPos";
     inline const char* KEY_REMOTE_CONTROL = "remoteControl";
     inline const char* KEY_INPUT = "input";
     inline const char* KEY_MOUSE = "mouse";
@@ -59,11 +60,30 @@ namespace SharedCursor
         Waiting
     };
 
+    inline QDebug operator<< (QDebug d, ConnectionState state) {
+        switch (state) {
+        case ConnectionState::Unknown: d << "Unknown"; break;
+        case ConnectionState::Disconnected: d << "Disconnected"; break;
+        case ConnectionState::Connected: d << "Connected"; break;
+        case ConnectionState::Waiting: d << "Waiting"; break;
+        }
+        return d;
+    }
+
     enum ControlState {
         SelfControl = 0,
         Master,
         Slave
     };
+
+    inline QDebug operator<< (QDebug d, ControlState state) {
+        switch (state) {
+        case ControlState::SelfControl: d << "SelfControl"; break;
+        case ControlState::Master: d << "Master"; break;
+        case ControlState::Slave: d << "Slave"; break;
+        }
+        return d;
+    }
 
     struct Transit
     {

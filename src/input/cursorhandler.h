@@ -26,7 +26,6 @@ public slots:
 signals:
     void started();
     void finished();
-    void controlRemoteDevice(const QUuid &uuid, bool state);
     void message(const QUuid &uuid, const QJsonObject &json);
     void remoteControl(const QUuid &master, const QUuid &slave);
 
@@ -48,6 +47,7 @@ private:
     void checkCursor(const QPoint &pos);
     void sendCursorDelta(const QUuid &uuid, const QPoint &pos);
     void sendCursorPosition(const QUuid &uuid, const QPoint &pos);
+    void sendCursorMessage(const QUuid &uuid, const char* type, const QPoint &pos);
     void setCursorPosition(const QPoint &pos);
     void sendRemoteControlMessage(bool state, const QPoint &pos);
 

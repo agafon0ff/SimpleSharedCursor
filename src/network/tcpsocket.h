@@ -3,6 +3,7 @@
 #include <QSharedPointer>
 #include <QTcpSocket>
 #include <QJsonObject>
+#include <QStack>
 #include <QUuid>
 
 #include "opensslwrapper.h"
@@ -54,13 +55,17 @@ private:
     QHostAddress host;
     quint16 port = SharedCursor::DEFAULT_TCP_PORT;
     bool _isConnected = false;
-    bool _isSending = false;
     QByteArray dataIn, dataInDec;
     QByteArray dataOut, dataOutEnc;
     QJsonObject jsonIn, jsonOut;
     QString messageType;
+    QStack<int> dataSizes;
     OpenSslWrapper sslWraper;
     TcpSocket::Type type = TcpSocket::Type::Independent;
+
+    void appendDataSizeToOutBuffer();
+    void extractDataSizes(const QByteArray &data);
+    void parseInputData(const QByteArray &data);
 
 private slots:
     void onReadyRead();

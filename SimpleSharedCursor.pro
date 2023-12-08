@@ -6,7 +6,7 @@ CONFIG += embed_translations
 
 TEMPLATE = app
 QMAKE_LFLAGS += -no-pie
-QMAKE_CXXFLAGS_RELEASE += -O2
+#QMAKE_CXXFLAGS_RELEASE += -O2
 
 INCLUDEPATH += \
     src \

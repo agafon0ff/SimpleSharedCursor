@@ -44,19 +44,24 @@ void OpenSslWrapper::encrypt(const QByteArray& input, QByteArray &output)
                     inputData.size(), &eKey, reinterpret_cast<unsigned char *>(initVector.data()), AES_ENCRYPT);
 }
 
-bool OpenSslWrapper::decrypt(const QByteArray& input, QByteArray &output)
+bool OpenSslWrapper::decrypt(const QByteArray &input, QByteArray &output)
+{
+    return decrypt(input.data(), input.size(), output);
+}
+
+bool OpenSslWrapper::decrypt(const char *input, int _size, QByteArray &output)
 {
     output.clear();
 
-    if (input.size() < AES_BLOCK_SIZE) return false;
-    if (input.size() % AES_BLOCK_SIZE != 0) return false;
+    if (_size < AES_BLOCK_SIZE) return false;
+    if (_size % AES_BLOCK_SIZE != 0) return false;
 
-    initVector.replace(0, AES_BLOCK_SIZE, input);
-    decrypted.resize(input.size());
+    memcpy(initVector.data(), input, AES_BLOCK_SIZE);
+    decrypted.resize(_size);
 
-    AES_cbc_encrypt(reinterpret_cast<const unsigned char *>(input.data() + AES_BLOCK_SIZE),
+    AES_cbc_encrypt(reinterpret_cast<const unsigned char *>(input + AES_BLOCK_SIZE),
                     reinterpret_cast<unsigned char *>(decrypted.data()),
-                    input.size() - AES_BLOCK_SIZE, &dKey, reinterpret_cast<unsigned char *>(initVector.data()), AES_DECRYPT);
+                    _size - AES_BLOCK_SIZE, &dKey, reinterpret_cast<unsigned char *>(initVector.data()), AES_DECRYPT);
 
     quint32 size = qFromBigEndian<quint32>(decrypted.data());
 

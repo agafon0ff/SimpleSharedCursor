@@ -32,16 +32,15 @@ void InputHandler::setCenterIn(const QPoint &pos)
 void InputHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
 {
     remoteUuid = slave;
+    isActive = master != slave && ownUuid == master;
 
-    if (master != slave && master == ownUuid) {
-        isActive = true;
+    if (isActive) {
         show();
         setFocus();
         activateWindow();
     }
     else {
         hide();
-        isActive = false;
     }
 }
 

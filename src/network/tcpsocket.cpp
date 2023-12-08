@@ -1,8 +1,11 @@
 #include <QJsonObject>
+#include <QtEndian>
 #include <QDebug>
 
 #include "tcpsocket.h"
 #include "utils.h"
+
+static const int sizeofInt32 = 4;
 
 TcpSocket::TcpSocket(QObject *parent)
     : QTcpSocket{parent}
@@ -86,31 +89,44 @@ void TcpSocket::stop()
 
 void TcpSocket::sendMessage(const QJsonObject &json)
 {
-    if (_isSending) {
-        qDebug() << Q_FUNC_INFO << "ERROR: message isn't sent!" << json;
-        return;
-    }
-//    qDebug() << Q_FUNC_INFO << uuid << json;
-
-    _isSending = true;
     SharedCursor::convertJsonToArray(json, dataOut);
     sslWraper.encrypt(dataOut, dataOutEnc);
+    appendDataSizeToOutBuffer();
     write(dataOutEnc);
-    _isSending = false;
 }
 
-void TcpSocket::onReadyRead()
+void TcpSocket::appendDataSizeToOutBuffer()
 {
-    dataIn.resize(bytesAvailable());
-    read(dataIn.data(), dataIn.size());
-    sslWraper.decrypt(dataIn, dataInDec);
+    int size = dataOutEnc.size();
+    dataOutEnc.resize(size + sizeofInt32);
+    qToBigEndian(size, dataOutEnc.data() + size);
+}
 
-    if (!SharedCursor::convertArrayToJson(dataInDec, jsonIn)) {
+void TcpSocket::extractDataSizes(const QByteArray &data)
+{
+    dataSizes.clear();
+    int size = data.size();
+
+    for(int i=0; i<data.size(); ++i) {
+        if (size > sizeofInt32) {
+            int length = qFromBigEndian<quint32>(data.data() + (size - sizeofInt32));
+            if (length + sizeofInt32 <= size) {
+                dataSizes.push(length);
+                size -= length + sizeofInt32;
+            }
+            else {
+                break;
+            }
+        }
+    }
+}
+
+void TcpSocket::parseInputData(const QByteArray &data)
+{
+    if (!SharedCursor::convertArrayToJson(data, jsonIn)) {
         qDebug() << Q_FUNC_INFO << "ERROR: Json parsing!" << dataInDec;
         return;
     }
-
-//    qDebug() << Q_FUNC_INFO << uuid << jsonIn;
 
     if (_isConnected) {
         emit message(uuid, jsonIn);
@@ -134,12 +150,25 @@ void TcpSocket::onReadyRead()
     }
 }
 
+void TcpSocket::onReadyRead()
+{
+    dataIn.resize(bytesAvailable());
+    read(dataIn.data(), dataIn.size());
+    extractDataSizes(dataIn);
+
+    int step = 0;
+    while (!dataSizes.isEmpty()) {
+        int size = dataSizes.pop();
+        sslWraper.decrypt(dataIn.data() + step, size, dataInDec);
+        parseInputData(dataInDec);
+        step = size + sizeofInt32;
+    }
+}
+
 void TcpSocket::onConnected()
 {
     SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_CONNECT_REQUEST);
-    SharedCursor::convertJsonToArray(jsonOut, dataOut);
-    sslWraper.encrypt(dataOut, dataOutEnc);
-    write(dataOutEnc);
+    sendMessage(jsonOut);
 }
 
 void TcpSocket::onDisconnected()

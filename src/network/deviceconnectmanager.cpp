@@ -32,10 +32,8 @@ void DeviceConnectManager::setKeyword(const QString &keyword)
     qDebug() << Q_FUNC_INFO;
     _keyword = keyword;
 
-    auto i = devices.constBegin();
-    while (i != devices.constEnd()) {
-        i.value()->setKeyword(_keyword);
-        ++i;
+    for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
+        it.value()->setKeyword(_keyword);
     }
 }
 
@@ -109,11 +107,9 @@ void DeviceConnectManager::sendRemoteControlMessage(const QUuid &master, const Q
 
     qDebug() << Q_FUNC_INFO << jsonRemoteControl;
 
-    auto it = devices.constBegin();
-    while (it != devices.constEnd()) {
+    for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
         if (it.key() != _uuid) {
             it.value()->sendMessage(jsonRemoteControl);
-            ++it;
         }
     }
 }
@@ -184,22 +180,19 @@ void DeviceConnectManager::onMessageReceived(const QUuid &uuid, const QJsonObjec
     const QString &type = json.value(SharedCursor::KEY_TYPE).toString();
 
     if (type == SharedCursor::KEY_REMOTE_CONTROL) {
-
-        qDebug() << Q_FUNC_INFO << type << uuid;
-
         emit remoteControl(QUuid::fromString(json.value(SharedCursor::KEY_MASTER).toString()),
                            QUuid::fromString(json.value(SharedCursor::KEY_SLAVE).toString()));
     }
+    else if (type == SharedCursor::KEY_INIT_CURSOR_POS) {
+        const QJsonValue &value = json.value(SharedCursor::KEY_VALUE);
+        emit cursorInitPosition(SharedCursor::jsonValueToPoint(value));
+    }
     else if (type == SharedCursor::KEY_CURSOR_POS) {
-        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_POS);
+        const QJsonValue &value = json.value(SharedCursor::KEY_VALUE);
         emit cursorPosition(SharedCursor::jsonValueToPoint(value));
     }
     else if (type == SharedCursor::KEY_CURSOR_DELTA) {
-        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_DELTA);
-        emit cursorDelta(SharedCursor::jsonValueToPoint(value));
-    }
-    else if (type == SharedCursor::KEY_CURSOR_DELTA) {
-        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_DELTA);
+        const QJsonValue &value = json.value(SharedCursor::KEY_VALUE);
         emit cursorDelta(SharedCursor::jsonValueToPoint(value));
     }
     else if (type == SharedCursor::KEY_INPUT) {

@@ -32,7 +32,12 @@ void ClipboardHandler::setConnectionState(const QUuid &uuid, SharedCursor::Conne
 void ClipboardHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
 {
     controlledByUuid = master;
-    controlState = slave == ownUuid ? SharedCursor::SelfControl : SharedCursor::Slave;
+    controlState = SharedCursor::SelfControl;
+
+    if (master != slave) {
+        if (ownUuid == master) controlState = SharedCursor::Master;
+        else if(ownUuid == slave) controlState = SharedCursor::Slave;
+    }
 
     qDebug() << Q_FUNC_INFO << master << slave << controlState;
 }

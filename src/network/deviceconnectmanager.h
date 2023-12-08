@@ -37,6 +37,7 @@ signals:
     void deviceConnectionChanged(const QUuid &uuid, SharedCursor::ConnectionState state);
     void remoteControl(const QUuid &master, const QUuid &slave);
     void cursorPosition(const QPoint &pos);
+    void cursorInitPosition(const QPoint &pos);
     void cursorDelta(const QPoint &pos);
     void keyboardEvent(int keycode, bool state);
     void mouseEvent(int button, bool state);
