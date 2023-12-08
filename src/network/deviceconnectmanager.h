@@ -24,6 +24,7 @@ public slots:
     void connectToDevice(const QUuid &uuid, const QHostAddress &host);
 
     void sendMessage(const QUuid &uuid, const QJsonObject &json);
+    void sendRemoteControlMessage(const QUuid &master, const QUuid &slave);
 
     void handleRemoveDevice(const QUuid &uuid);
     void handleDeviceConnected(TcpSocket* socket, const QJsonObject &json);
@@ -34,10 +35,9 @@ signals:
     void finished();
 
     void deviceConnectionChanged(const QUuid &uuid, SharedCursor::ConnectionState state);
-    void controlledByUuid(const QUuid &uuid);
-    void remoteCursorPosition(const QUuid &uuid, const QPoint &pos);
-
+    void remoteControl(const QUuid &master, const QUuid &slave);
     void cursorPosition(const QPoint &pos);
+    void cursorInitPosition(const QPoint &pos);
     void cursorDelta(const QPoint &pos);
     void keyboardEvent(int keycode, bool state);
     void mouseEvent(int button, bool state);
@@ -48,10 +48,9 @@ private slots:
     void onMessageReceived(const QUuid &uuid, const QJsonObject &json);
 
 private:
-    bool isSending = false;
     QUuid _uuid;
     QString _keyword;
-    QJsonObject jsonMessage;
+    QJsonObject jsonRemoteControl;
     quint16 _port = SharedCursor::DEFAULT_TCP_PORT;
     QMap<QUuid, QSharedPointer<TcpSocket>> devices;
     QVector<QSharedPointer<TcpSocket>> tempSockets;

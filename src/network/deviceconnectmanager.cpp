@@ -32,10 +32,8 @@ void DeviceConnectManager::setKeyword(const QString &keyword)
     qDebug() << Q_FUNC_INFO;
     _keyword = keyword;
 
-    auto i = devices.constBegin();
-    while (i != devices.constEnd()) {
-        i.value()->setKeyword(_keyword);
-        ++i;
+    for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
+        it.value()->setKeyword(_keyword);
     }
 }
 
@@ -95,19 +93,25 @@ void DeviceConnectManager::connectToDevice(const QUuid &uuid, const QHostAddress
 
 void DeviceConnectManager::sendMessage(const QUuid &uuid, const QJsonObject &json)
 {
-    if (isSending) {
-        qDebug() << Q_FUNC_INFO << "!! is sending !!";
-        return;
-    }
-
-    isSending = true;
-
     auto it = devices.find(uuid);
     if (it != devices.end()) {
         it.value()->sendMessage(json);
     }
+}
 
-    isSending = false;
+void DeviceConnectManager::sendRemoteControlMessage(const QUuid &master, const QUuid &slave)
+{
+    jsonRemoteControl[SharedCursor::KEY_TYPE] = SharedCursor::KEY_REMOTE_CONTROL;
+    jsonRemoteControl[SharedCursor::KEY_MASTER] = master.toString();
+    jsonRemoteControl[SharedCursor::KEY_SLAVE] = slave.toString();
+
+    qDebug() << Q_FUNC_INFO << jsonRemoteControl;
+
+    for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
+        if (it.key() != _uuid) {
+            it.value()->sendMessage(jsonRemoteControl);
+        }
+    }
 }
 
 void DeviceConnectManager::handleRemoveDevice(const QUuid &uuid)
@@ -172,27 +176,23 @@ void DeviceConnectManager::onSocketConnected(qintptr socketDescriptor)
 
 void DeviceConnectManager::onMessageReceived(const QUuid &uuid, const QJsonObject &json)
 {
+    Q_UNUSED(uuid);
     const QString &type = json.value(SharedCursor::KEY_TYPE).toString();
 
     if (type == SharedCursor::KEY_REMOTE_CONTROL) {
-        if (json.value(SharedCursor::KEY_STATE).toBool()) {
-            const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_POS);
-            emit controlledByUuid(uuid);
-            emit cursorPosition(SharedCursor::jsonValueToPoint(value));
-        } else {
-            emit controlledByUuid(_uuid);
-        }
+        emit remoteControl(QUuid::fromString(json.value(SharedCursor::KEY_MASTER).toString()),
+                           QUuid::fromString(json.value(SharedCursor::KEY_SLAVE).toString()));
+    }
+    else if (type == SharedCursor::KEY_INIT_CURSOR_POS) {
+        const QJsonValue &value = json.value(SharedCursor::KEY_VALUE);
+        emit cursorInitPosition(SharedCursor::jsonValueToPoint(value));
     }
     else if (type == SharedCursor::KEY_CURSOR_POS) {
-        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_POS);
-        emit remoteCursorPosition(uuid, SharedCursor::jsonValueToPoint(value));
+        const QJsonValue &value = json.value(SharedCursor::KEY_VALUE);
+        emit cursorPosition(SharedCursor::jsonValueToPoint(value));
     }
     else if (type == SharedCursor::KEY_CURSOR_DELTA) {
-        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_DELTA);
-        emit cursorDelta(SharedCursor::jsonValueToPoint(value));
-    }
-    else if (type == SharedCursor::KEY_CURSOR_DELTA) {
-        const QJsonValue &value = json.value(SharedCursor::KEY_CURSOR_DELTA);
+        const QJsonValue &value = json.value(SharedCursor::KEY_VALUE);
         emit cursorDelta(SharedCursor::jsonValueToPoint(value));
     }
     else if (type == SharedCursor::KEY_INPUT) {

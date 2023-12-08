@@ -20,21 +20,21 @@ public slots:
     void setCurrentUuid(const QUuid &uuid);
     void setTransits(const QMap<QUuid, QVector<SharedCursor::Transit>> &transits);
     void setConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state);
-    void setRemoteCursorPos(const QUuid &uuid, const QPoint &pos);
-    void setControlledByUuid(const QUuid &uuid);
+    void setRemoteCursorPos(const QPoint &pos);
+    void setRemoteControlState(const QUuid &master, const QUuid &slave);
 
 signals:
     void started();
     void finished();
-    void controlRemoteDevice(const QUuid &uuid, bool state);
     void message(const QUuid &uuid, const QJsonObject &json);
+    void remoteControl(const QUuid &master, const QUuid &slave);
 
 private:
     int timerId = 0;
     SharedCursor::ControlState controlState = SharedCursor::SelfControl;
     SharedCursor::ConnectionState currentTransitState = SharedCursor::Unknown;
     QUuid transitUuid;
-    QUuid currentDeviceUuid;
+    QUuid ownUuid;
     QUuid controlledByUuid;
     QJsonObject jsonDelta, jsonPosition, jsonRemoteControl;
     QPoint lastCursorPosition = {0, 0};
@@ -45,8 +45,9 @@ private:
 
     void timerEvent(QTimerEvent *e);
     void checkCursor(const QPoint &pos);
-    void sendCursorDelta(const QPoint &pos);
-    void sendCursorPosition(const QPoint &pos);
+    void sendCursorDelta(const QUuid &uuid, const QPoint &pos);
+    void sendCursorPosition(const QUuid &uuid, const QPoint &pos);
+    void sendCursorMessage(const QUuid &uuid, const char* type, const QPoint &pos);
     void setCursorPosition(const QPoint &pos);
     void sendRemoteControlMessage(bool state, const QPoint &pos);
 

@@ -17,6 +17,6 @@ public slots:
     void setWheelEvent(int delta);
 
 private:
-    QMap<int, quint8> keymap;
+    QMap<int, unsigned long> keymap;
     void createKeymap();
 };

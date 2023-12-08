@@ -52,7 +52,7 @@ void CursorHandler::setCurrentUuid(const QUuid &uuid)
     qDebug() << Q_FUNC_INFO << uuid;
 
     transitUuid = uuid;
-    currentDeviceUuid = uuid;
+    ownUuid = uuid;
     controlledByUuid = uuid;
     connnetionStates[uuid] = SharedCursor::Connected;
 
@@ -69,12 +69,11 @@ void CursorHandler::setTransits(const QMap<QUuid, QVector<SharedCursor::Transit>
 {
     qDebug() << Q_FUNC_INFO;
     transitsMap = _transits;
-    currentTransits = transitsMap.value(currentDeviceUuid);
+    currentTransits = transitsMap.value(ownUuid);
 }
 
 void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state)
 {
-    qDebug() << Q_FUNC_INFO << uuid << state;
     connnetionStates[uuid] = state;
 
     switch (controlState) {
@@ -83,35 +82,44 @@ void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::Connecti
     case SharedCursor::Master:
         if (uuid == transitUuid && state != SharedCursor::Connected) {
             controlState = SharedCursor::SelfControl;
-            transitUuid = currentDeviceUuid;
+            transitUuid = ownUuid;
             currentTransits = transitsMap.value(transitUuid);
-            sendRemoteControlMessage(false, {0, 0});
-            emit controlRemoteDevice(currentDeviceUuid, false);
+            emit remoteControl(ownUuid, ownUuid);
         }
         break;
     case SharedCursor::Slave:
         if (uuid == controlledByUuid && state != SharedCursor::Connected) {
             controlState = SharedCursor::SelfControl;
-            transitUuid = currentDeviceUuid;
+            transitUuid = ownUuid;
             currentTransits = transitsMap.value(transitUuid);
         }
         break;
     }
+
+    qDebug() << Q_FUNC_INFO << uuid << state << controlState;
 }
 
-void CursorHandler::setRemoteCursorPos(const QUuid &uuid, const QPoint &pos)
+void CursorHandler::setRemoteCursorPos(const QPoint &pos)
 {
-    if (controlState == SharedCursor::Master && uuid == transitUuid) {
+    if (controlState == SharedCursor::Master) {
         checkCursor(pos);
     }
 }
 
-void CursorHandler::setControlledByUuid(const QUuid &uuid)
+void CursorHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
 {
-    qDebug() << Q_FUNC_INFO << uuid;
+    controlledByUuid = master;
 
-    controlledByUuid = uuid;
-    controlState = uuid == currentDeviceUuid ? SharedCursor::SelfControl : SharedCursor::Slave;
+    if (master != slave) {
+        if (ownUuid == master) controlState = SharedCursor::Master;
+        else if(ownUuid == slave) controlState = SharedCursor::Slave;
+    }
+    else {
+        controlState = SharedCursor::SelfControl;
+        setCursorPosition(holdCursorPosition);
+    }
+
+    qDebug() << Q_FUNC_INFO << master << slave << controlState;
 }
 
 void CursorHandler::timerEvent(QTimerEvent *e)
@@ -127,10 +135,10 @@ void CursorHandler::timerEvent(QTimerEvent *e)
         break;
     case SharedCursor::Master:
         setCursorPosition(holdCursorPosition);
-        sendCursorDelta(pos);
+        sendCursorMessage(transitUuid, SharedCursor::KEY_CURSOR_DELTA, pos - holdCursorPosition);
         break;
     case SharedCursor::Slave:
-        sendCursorPosition(pos);
+        sendCursorMessage(controlledByUuid,SharedCursor::KEY_CURSOR_POS, pos);
         break;
     }
 
@@ -159,61 +167,41 @@ void CursorHandler::checkCursor(const QPoint &pos)
 
     if (newTransitUuid != transitUuid) {
         if (connnetionStates.value(newTransitUuid) == SharedCursor::Connected && transitsMap.contains(newTransitUuid)) {
-            sendRemoteControlMessage(false, {0, 0});
             transitUuid = newTransitUuid;
             currentTransitState = connnetionStates.value(transitUuid);
             currentTransits = transitsMap.value(transitUuid);
 
             const QPoint remotePos = calculateRemotePos(*transitIterator, pos);
-            sendRemoteControlMessage(true, remotePos);
+            emit remoteControl(ownUuid, transitUuid);
+            sendCursorMessage(transitUuid, SharedCursor::KEY_INIT_CURSOR_POS, remotePos);
 
-            if (transitUuid == currentDeviceUuid) {
+            if (transitUuid == ownUuid) {
                 controlState = SharedCursor::SelfControl;
-                emit controlRemoteDevice(transitUuid, false);
                 setCursorPosition(remotePos);
             }
             else {
                 controlState = SharedCursor::Master;
-                emit controlRemoteDevice(transitUuid, true);
                 setCursorPosition(holdCursorPosition);
             }
 
-            qDebug() << Q_FUNC_INFO << transitUuid;
+            qDebug() << Q_FUNC_INFO << transitUuid << controlState;
         }
     }
 }
 
-void CursorHandler::sendCursorDelta(const QPoint &pos)
+void CursorHandler::sendCursorMessage(const QUuid &uuid, const char *type, const QPoint &pos)
 {
     if (pos == lastCursorPosition)
         return;
 
-    jsonDelta[SharedCursor::KEY_TYPE] = SharedCursor::KEY_CURSOR_DELTA;
-    jsonDelta[SharedCursor::KEY_CURSOR_DELTA] = SharedCursor::pointToJsonValue(pos - holdCursorPosition);
-    emit message(transitUuid, jsonDelta);
-}
-
-void CursorHandler::sendCursorPosition(const QPoint &pos)
-{
-    if (pos == lastCursorPosition)
-        return;
-
-    jsonPosition[SharedCursor::KEY_TYPE] = SharedCursor::KEY_CURSOR_POS;
-    jsonPosition[SharedCursor::KEY_CURSOR_POS] = SharedCursor::pointToJsonValue(pos);
-    emit message(controlledByUuid, jsonPosition);
+    jsonPosition[SharedCursor::KEY_TYPE] = type;
+    jsonPosition[SharedCursor::KEY_VALUE] = SharedCursor::pointToJsonValue(pos);
+    emit message(uuid, jsonPosition);
 }
 
 void CursorHandler::setCursorPosition(const QPoint &pos)
 {
     QCursor::setPos(pos);
-}
-
-void CursorHandler::sendRemoteControlMessage(bool state, const QPoint &pos)
-{
-    jsonRemoteControl[SharedCursor::KEY_TYPE] = SharedCursor::KEY_REMOTE_CONTROL;
-    jsonRemoteControl[SharedCursor::KEY_STATE] = state;
-    jsonRemoteControl[SharedCursor::KEY_CURSOR_POS] = SharedCursor::pointToJsonValue(pos);
-    emit message(transitUuid, jsonRemoteControl);
 }
 
 QPoint CursorHandler::calculateRemotePos(const SharedCursor::Transit &transit, const QPoint &pos)

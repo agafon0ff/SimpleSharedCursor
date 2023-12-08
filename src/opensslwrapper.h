@@ -13,6 +13,7 @@ public:
     void setKey(const QByteArray& key);
     void encrypt(const QByteArray &input, QByteArray &output);
     bool decrypt(const QByteArray& input, QByteArray &output);
+    bool decrypt(const char* input, int size, QByteArray &output);
 
 private:
     AES_KEY eKey, dKey;

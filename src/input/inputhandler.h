@@ -16,12 +16,13 @@ signals:
     void message(const QUuid &uuid, const QJsonObject &json);
 
 public slots:
-    void holdCursor(const QUuid &uuid, bool state);
+    void setUuid(const QUuid &uuid);
     void setCenterIn(const QPoint &pos);
+    void setRemoteControlState(const QUuid &master, const QUuid &slave);
 
 private:
     bool isActive = false;
-    QUuid remoteUuid;
+    QUuid ownUuid, remoteUuid;
     QJsonObject jsonKey;
 
     bool event(QEvent *event) override;
