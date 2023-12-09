@@ -89,10 +89,12 @@ void TcpSocket::stop()
 
 void TcpSocket::sendMessage(const QJsonObject &json)
 {
-    SharedCursor::convertJsonToArray(json, dataOut);
-    sslWraper.encrypt(dataOut, dataOutEnc);
-    appendDataSizeToOutBuffer();
-    write(dataOutEnc);
+    if (state() == QTcpSocket::ConnectedState) {
+        SharedCursor::convertJsonToArray(json, dataOut);
+        sslWraper.encrypt(dataOut, dataOutEnc);
+        appendDataSizeToOutBuffer();
+        write(dataOutEnc);
+    }
 }
 
 void TcpSocket::appendDataSizeToOutBuffer()
@@ -102,14 +104,14 @@ void TcpSocket::appendDataSizeToOutBuffer()
     qToBigEndian(size, dataOutEnc.data() + size);
 }
 
-void TcpSocket::extractDataSizes(const QByteArray &data)
+void TcpSocket::extractDataSizesFromInputData()
 {
     dataSizes.clear();
-    int size = data.size();
+    int size = dataIn.size();
 
-    for(int i=0; i<data.size(); ++i) {
+    for(int i=0; i<dataIn.size(); ++i) {
         if (size > sizeofInt32) {
-            int length = qFromBigEndian<quint32>(data.data() + (size - sizeofInt32));
+            int length = qFromBigEndian<quint32>(dataIn.data() + (size - sizeofInt32));
             if (length + sizeofInt32 <= size) {
                 dataSizes.push(length);
                 size -= length + sizeofInt32;
@@ -154,14 +156,14 @@ void TcpSocket::onReadyRead()
 {
     dataIn.resize(bytesAvailable());
     read(dataIn.data(), dataIn.size());
-    extractDataSizes(dataIn);
+    extractDataSizesFromInputData();
 
     int step = 0;
     while (!dataSizes.isEmpty()) {
         int size = dataSizes.pop();
         sslWraper.decrypt(dataIn.data() + step, size, dataInDec);
         parseInputData(dataInDec);
-        step = size + sizeofInt32;
+        step += size + sizeofInt32;
     }
 }
 

@@ -64,7 +64,7 @@ private:
     TcpSocket::Type type = TcpSocket::Type::Independent;
 
     void appendDataSizeToOutBuffer();
-    void extractDataSizes(const QByteArray &data);
+    void extractDataSizesFromInputData();
     void parseInputData(const QByteArray &data);
 
 private slots:
