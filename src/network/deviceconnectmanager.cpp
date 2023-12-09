@@ -33,7 +33,9 @@ void DeviceConnectManager::setKeyword(const QString &keyword)
     _keyword = keyword;
 
     for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
-        it.value()->setKeyword(_keyword);
+        if (!it.value().isNull()) {
+            it.value()->setKeyword(_keyword);
+        }
     }
 }
 
