@@ -94,7 +94,7 @@ void DeviceConnectManager::connectToDevice(const QUuid &uuid, const QHostAddress
 void DeviceConnectManager::sendMessage(const QUuid &uuid, const QJsonObject &json)
 {
     auto it = devices.find(uuid);
-    if (it != devices.end()) {
+    if (it != devices.end() && !it.value().isNull()) {
         it.value()->sendMessage(json);
     }
 }
@@ -108,7 +108,7 @@ void DeviceConnectManager::sendRemoteControlMessage(const QUuid &master, const Q
     qDebug() << Q_FUNC_INFO << jsonRemoteControl;
 
     for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
-        if (it.key() != _uuid) {
+        if (it.key() != _uuid && !it.value().isNull()) {
             it.value()->sendMessage(jsonRemoteControl);
         }
     }
