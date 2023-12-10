@@ -53,6 +53,9 @@
       <property name="spacing">
        <number>0</number>
       </property>
+      <property name="leftMargin">
+       <number>3</number>
+      </property>
       <property name="topMargin">
        <number>0</number>
       </property>
@@ -77,10 +80,19 @@
          </size>
         </property>
         <property name="text">
-         <string>-</string>
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap resource="../../resources.qrc">:/img/disconnected.png</pixmap>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="margin">
+         <number>3</number>
         </property>
        </widget>
       </item>
@@ -119,7 +131,14 @@
          </size>
         </property>
         <property name="text">
-         <string>X</string>
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../../resources.qrc">
+          <normaloff>:/img/cross.png</normaloff>:/img/cross.png</iconset>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -128,6 +147,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

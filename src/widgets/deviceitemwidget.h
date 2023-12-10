@@ -30,6 +30,7 @@ signals:
 
 private:
     Ui::DeviceItemWidget *ui;
+    QPixmap pixmapConnected, pixmapDisconnected;
     QUuid uuid;
     SharedCursor::ConnectionState state = SharedCursor::Unknown;
 };

@@ -3,7 +3,9 @@
 
 DeviceItemWidget::DeviceItemWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::DeviceItemWidget)
+    ui{new Ui::DeviceItemWidget},
+    pixmapConnected{"://img/connected.png"},
+    pixmapDisconnected{"://img/disconnected.png"}
 {
     ui->setupUi(this);
 
@@ -40,16 +42,16 @@ void DeviceItemWidget::setState(SharedCursor::ConnectionState _state)
     state = _state;
     switch(state) {
     case SharedCursor::Unknown:
-        ui->labelStatus->setText("?");
+        ui->labelStatus->setPixmap(pixmapDisconnected);
         break;
     case SharedCursor::Disconnected:
-        ui->labelStatus->setText("-");
+        ui->labelStatus->setPixmap(pixmapDisconnected);
         break;
     case SharedCursor::Connected:
-        ui->labelStatus->setText("+");
+        ui->labelStatus->setPixmap(pixmapConnected);
         break;
     case SharedCursor::Waiting:
-        ui->labelStatus->setText(".");
+        ui->labelStatus->setPixmap(pixmapDisconnected);
         break;
     }
 }
