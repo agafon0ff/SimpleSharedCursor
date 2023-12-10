@@ -11,9 +11,21 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>SettingsWidget</string>
+   <string>SimpleSharedCursor Settings</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <property name="leftMargin">
+    <number>6</number>
+   </property>
+   <property name="topMargin">
+    <number>6</number>
+   </property>
+   <property name="rightMargin">
+    <number>6</number>
+   </property>
+   <property name="bottomMargin">
+    <number>6</number>
+   </property>
    <item>
     <widget class="QFrame" name="frameNames">
      <property name="frameShape">
@@ -167,6 +179,10 @@
        <property name="text">
         <string>Cancel</string>
        </property>
+       <property name="icon">
+        <iconset resource="../../resources.qrc">
+         <normaloff>:/img/cross.png</normaloff>:/img/cross.png</iconset>
+       </property>
       </widget>
      </item>
      <item>
@@ -174,12 +190,18 @@
        <property name="text">
         <string>OK</string>
        </property>
+       <property name="icon">
+        <iconset resource="../../resources.qrc">
+         <normaloff>:/img/ok.png</normaloff>:/img/ok.png</iconset>
+       </property>
       </widget>
      </item>
     </layout>
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

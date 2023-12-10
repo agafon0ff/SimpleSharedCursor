@@ -14,6 +14,7 @@ SettingsWidget::SettingsWidget(QWidget *parent)
     , ui(new Ui::SettingsWidget)
 {
     ui->setupUi(this);
+    setWindowIcon(QIcon("://img/SharedCursor.ico"));
 
     connect(ui->btnFindDevices, &QPushButton::clicked, this, &SettingsWidget::findDevices);
     connect(ui->btnOk, &QPushButton::clicked, this, &SettingsWidget::onBtnOkClicked);
@@ -41,10 +42,8 @@ void SettingsWidget::initialize()
     ui->lineDeviceName->setText(Settings.name());
 
     const QMap<QUuid, QSharedPointer<SharedCursor::Device>> &devices = Settings.devices();
-    auto i = devices.constBegin();
-    while (i != devices.constEnd()) {
+    for (auto i = devices.constBegin(); i != devices.constEnd(); ++i) {
         createFoundDeviceWidget(i.value());
-        ++i;
     }
 }
 
