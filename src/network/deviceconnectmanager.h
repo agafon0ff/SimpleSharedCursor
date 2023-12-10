@@ -1,7 +1,8 @@
 #pragma once
 
-#include <QObject>
 #include <QSharedPointer>
+#include <QJsonObject>
+#include <QObject>
 
 #include "tcpsocket.h"
 #include "tcpserver.h"
@@ -42,6 +43,7 @@ signals:
     void keyboardEvent(int keycode, bool state);
     void mouseEvent(int button, bool state);
     void wheelEvent(int delta);
+    void clipboard(const QUuid &uuid, const QJsonObject &json);
 
 private slots:
     void onSocketConnected(qintptr socketDescriptor);

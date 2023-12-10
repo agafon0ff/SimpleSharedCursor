@@ -211,6 +211,9 @@ void DeviceConnectManager::onMessageReceived(const QUuid &uuid, const QJsonObjec
             emit wheelEvent(value);
         }
     }
+    else if (type == SharedCursor::KEY_CLIPBOARD) {
+        emit clipboard(uuid, json);
+    }
 }
 
 QJsonObject DeviceConnectManager::devicePtrToJsonObject(QSharedPointer<SharedCursor::Device> device)

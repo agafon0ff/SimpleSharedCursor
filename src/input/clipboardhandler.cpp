@@ -4,53 +4,78 @@
 #include <QDebug>
 
 #include "clipboardhandler.h"
+#include "global.h"
 
 ClipboardHandler::ClipboardHandler(QObject *parent)
     : QObject{parent}
 {
     const QClipboard *clipboard = QApplication::clipboard();
     connect(clipboard, &QClipboard::dataChanged, this, &ClipboardHandler::onClipboardChanged);
+    jsonMessage[SharedCursor::KEY_TYPE] = SharedCursor::KEY_CLIPBOARD;
 }
 
 void ClipboardHandler::setCurrentUuid(const QUuid &uuid)
 {
     qDebug() << Q_FUNC_INFO << uuid;
-    ownUuid = uuid;
-    controlledByUuid = ownUuid;
-}
-
-void ClipboardHandler::setConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state)
-{
-    qDebug() << Q_FUNC_INFO << uuid << state;
-
-    if (uuid == controlledByUuid && state != SharedCursor::ConnectionState::Connected) {
-        controlState = SharedCursor::SelfControl;
-        controlledByUuid = ownUuid;
-    }
+    uuidOwn = uuid;
+    uuidMaster = uuidOwn;
 }
 
 void ClipboardHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
 {
-    controlledByUuid = master;
-    controlState = SharedCursor::SelfControl;
-
-    if (master != slave) {
-        if (ownUuid == master) controlState = SharedCursor::Master;
-        else if(ownUuid == slave) controlState = SharedCursor::Slave;
+    if (slave != uuidOwn && !clipboardHolders.contains(slave)) {
+        clipboardHolders.insert(slave, false);
     }
 
-    qDebug() << Q_FUNC_INFO << master << slave << controlState;
+    if (uuidSlave != slave && uuidSlave == uuidOwn) {
+        sendClipboard(slave);
+    }
+
+    uuidMaster = master;
+    uuidSlave = slave;
+
+    qDebug() << Q_FUNC_INFO << master << slave;
+}
+
+void ClipboardHandler::setClipboard(const QUuid &uuid, const QJsonObject &json)
+{
+    applyingClipboard = true;
+
+    auto it = clipboardHolders.find(uuid);
+    if (it != clipboardHolders.end()) {
+        it.value() = true;
+    }
+
+    const QString &text = json.value(SharedCursor::KEY_VALUE).toString();
+    QApplication::clipboard()->setText(text);
+
+    applyingClipboard = false;
 }
 
 void ClipboardHandler::onClipboardChanged()
 {
-    const QClipboard *clipboard = QApplication::clipboard();
-    const QMimeData *mimeData = clipboard->mimeData();
+    if (applyingClipboard) {
+        return;
+    }
 
-    qDebug() << Q_FUNC_INFO << clipboard->text();
-    qDebug() << Q_FUNC_INFO
-             << mimeData->hasImage()
-             << mimeData->hasUrls()
-             << mimeData->hasHtml()
-             << mimeData->hasText();
+    const QMimeData *mimeData = QApplication::clipboard()->mimeData();
+
+    if (mimeData->hasImage() || mimeData->hasUrls()) {
+        // currently only text is available
+        return;
+    }
+
+    for (auto it = clipboardHolders.begin(); it != clipboardHolders.end(); ++it) {
+        it.value() = false;
+    }
+}
+
+void ClipboardHandler::sendClipboard(const QUuid &uuid)
+{
+    auto it = clipboardHolders.find(uuid);
+    if (it != clipboardHolders.end() && !it.value()) {
+        jsonMessage[SharedCursor::KEY_VALUE] = QApplication::clipboard()->mimeData()->text();
+        emit message(uuid, jsonMessage);
+        it.value() = true;
+    }
 }
