@@ -48,6 +48,7 @@ namespace SharedCursor
     inline const char* KEY_PRESSED = "pressed";
     inline const char* KEY_MASTER = "master";
     inline const char* KEY_SLAVE = "slave";
+    inline const char* KEY_CLIPBOARD = "clipboard";
 
     inline const quint16 DEFAULT_TCP_PORT = 25786;
     inline const quint16 DEFAULT_UDP_PORT = 25787;
