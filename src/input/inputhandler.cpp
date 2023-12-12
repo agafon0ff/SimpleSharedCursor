@@ -2,6 +2,7 @@
 #include <QKeyEvent>
 #include <QWheelEvent>
 #include <QMouseEvent>
+#include <QApplication>
 #include <QCursor>
 #include <QDebug>
 
@@ -56,6 +57,8 @@ bool InputHandler::event(QEvent *event)
         }
         break;
     case QEvent::Close:
+        sendKeyEventMessage(Qt::Key_F4, true);
+        sendKeyEventMessage(Qt::Key_F4, false);
         event->ignore();
         break;
     case QEvent::KeyPress:
@@ -85,12 +88,17 @@ bool InputHandler::event(QEvent *event)
     return false;
 }
 
-void InputHandler::keyStateChanged(QKeyEvent *event, bool pressed)
+void InputHandler::sendKeyEventMessage(int keycode, bool pressed)
 {
     jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_KEYBOARD;
-    jsonKey[SharedCursor::KEY_VALUE] = static_cast<int>(event->key());
+    jsonKey[SharedCursor::KEY_VALUE] = keycode;
     jsonKey[SharedCursor::KEY_PRESSED] = pressed;
     emit message(remoteUuid, jsonKey);
+}
+
+void InputHandler::keyStateChanged(QKeyEvent *event, bool pressed)
+{
+    sendKeyEventMessage(static_cast<int>(event->key()), pressed);
 }
 
 void InputHandler::mouseStateChanged(QMouseEvent *event, bool pressed)

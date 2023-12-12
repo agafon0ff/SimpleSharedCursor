@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     QObject::connect(&cursorCheckerThread, &QThread::started, &cursorHandler, &CursorHandler::start);
     QObject::connect(&cursorCheckerThread, &QThread::finished, &cursorHandler, &CursorHandler::stop);
     QObject::connect(&cursorHandler, &CursorHandler::remoteControl, &inputHandler, &InputHandler::setRemoteControlState);
+    QObject::connect(&cursorHandler, &CursorHandler::controlStateChanged, &inputSimulator, &InputSimulator::setControlState);
     cursorHandler.moveToThread(&cursorCheckerThread);
 
     DeviceConnectManager devConnectManager;
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
     QObject::connect(&inputHandler, &InputHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
     QObject::connect(&cursorHandler, &CursorHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
     QObject::connect(&cursorHandler, &CursorHandler::remoteControl, &devConnectManager, &DeviceConnectManager::sendRemoteControlMessage);
-    QObject::connect(&cursorHandler, &CursorHandler::remoteControl, &cursorHandler, &CursorHandler::setRemoteControlState);
+    QObject::connect(&cursorHandler, &CursorHandler::remoteControl, &inputHandler, &InputHandler::setRemoteControlState);
     QObject::connect(&cursorHandler, &CursorHandler::remoteControl, &clipboardHandler, &ClipboardHandler::setRemoteControlState);
     QObject::connect(&devConnectManager, &DeviceConnectManager::remoteControl, &cursorHandler, &CursorHandler::setRemoteControlState);
     QObject::connect(&devConnectManager, &DeviceConnectManager::cursorPosition, &cursorHandler, &CursorHandler::setRemoteCursorPos);

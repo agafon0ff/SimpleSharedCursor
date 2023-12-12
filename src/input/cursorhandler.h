@@ -28,6 +28,7 @@ signals:
     void finished();
     void message(const QUuid &uuid, const QJsonObject &json);
     void remoteControl(const QUuid &master, const QUuid &slave);
+    void controlStateChanged(SharedCursor::ControlState state);
 
 private:
     int timerId = 0;
@@ -50,6 +51,7 @@ private:
     void sendCursorMessage(const QUuid &uuid, const char* type, const QPoint &pos);
     void setCursorPosition(const QPoint &pos);
     void sendRemoteControlMessage(bool state, const QPoint &pos);
+    void updateControlState(SharedCursor::ControlState state);
 
     QPoint calculateRemotePos(const SharedCursor::Transit &transit, const QPoint &pos);
 };
