@@ -24,8 +24,10 @@ private:
     bool isActive = false;
     QUuid ownUuid, remoteUuid;
     QJsonObject jsonKey;
+    QVector<int> pressedKeys;
 
     bool event(QEvent *event) override;
+    void sendKeyEventMessage(int keycode, bool pressed);
     void keyStateChanged(QKeyEvent *event, bool pressed);
     void mouseStateChanged(QMouseEvent *event, bool pressed);
     void wheelStateChanged(QWheelEvent *event);

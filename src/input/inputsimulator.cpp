@@ -19,6 +19,16 @@ InputSimulator::InputSimulator(QObject *parent)
     createKeymap();
 }
 
+void InputSimulator::setControlState(SharedCursor::ControlState state)
+{
+    if (controlState != state) {
+        if (controlState == SharedCursor::Slave) {
+            releasePressedKey();
+        }
+        controlState = state;
+    }
+}
+
 void InputSimulator::setCutsorPosition(const QPoint &pos)
 {
     QCursor::setPos(pos);
@@ -32,9 +42,8 @@ void InputSimulator::setCutsorDelta(const QPoint &pos)
 void InputSimulator::setKeyboardEvent(int keycode, bool state)
 {
 #ifdef Q_OS_UNIX
+    Display *display = XOpenDisplay(nullptr);
 
-    Display *display;
-    display = XOpenDisplay(nullptr);
     unsigned char code = 0;
 
     auto it = keymap.find(keycode);
@@ -47,16 +56,16 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
 
     if (state) {
         XTestFakeKeyEvent(display, code, True, 0);
+        pressedKeys.append(code);
     }
     else {
         XTestFakeKeyEvent(display, code, False, 0);
+        pressedKeys.removeOne(code);
     }
 
     XFlush(display);
     XCloseDisplay(display);
 #endif
-
-    XK_BackSpace;
 
 #ifdef Q_OS_WIN
     INPUT ip;
@@ -68,9 +77,11 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
 
     if (state) {
         ip.ki.dwFlags = 0;
+        pressedKeys.append(static_cast<unsigned short>(keycode));
     }
     else {
         ip.ki.dwFlags = KEYEVENTF_KEYUP;
+        pressedKeys.removeOne(static_cast<unsigned short>(keycode));
     }
 
     SendInput(1, &ip, sizeof(INPUT));
@@ -80,8 +91,7 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
 void InputSimulator::setMouseEvent(int button, bool state)
 {
 #ifdef Q_OS_UNIX
-    Display *display;
-    display = XOpenDisplay(Q_NULLPTR);
+    Display *display = XOpenDisplay(nullptr);
 
     if (button == 0) { //left
         XTestFakeButtonEvent(display, Button1, state, 0);
@@ -127,13 +137,8 @@ void InputSimulator::setMouseEvent(int button, bool state)
 void InputSimulator::setWheelEvent(int delta)
 {
 #ifdef Q_OS_UNIX
-    Display *display;
-    display = XOpenDisplay(Q_NULLPTR);
-
-    quint32 btnNum = Button4;
-    if (delta < 0) {
-        btnNum = Button5;
-    }
+    Display *display = XOpenDisplay(nullptr);
+    quint32 btnNum = delta < 0 ? Button5 : Button4;
 
     XTestFakeButtonEvent(display, btnNum, true, 0);
     XTestFakeButtonEvent(display, btnNum, false, 0);
@@ -155,6 +160,38 @@ void InputSimulator::setWheelEvent(int delta)
     ip.mi.mouseData = static_cast<DWORD>(delta);
 
     SendInput(1, &ip, sizeof(INPUT));
+#endif
+}
+
+void InputSimulator::releasePressedKey()
+{
+    if (pressedKeys.empty()) {
+        return;
+    }
+
+#ifdef Q_OS_UNIX
+    Display *display = XOpenDisplay(nullptr);
+
+    for (unsigned char code: qAsConst(pressedKeys)) {
+        XTestFakeKeyEvent(display, code, False, 0);
+    }
+
+    XFlush(display);
+    XCloseDisplay(display);
+#endif
+
+#ifdef Q_OS_WIN
+    INPUT ip;
+    ip.type = INPUT_KEYBOARD;
+    ip.ki.wScan = 0;
+    ip.ki.time = 0;
+    ip.ki.dwExtraInfo = 0;
+    ip.ki.dwFlags = KEYEVENTF_KEYUP;
+
+    for (unsigned short code: qAsConst(pressedKeys)) {
+        ip.ki.wVk = code;
+        SendInput(1, &ip, sizeof(INPUT));
+    }
 #endif
 }
 

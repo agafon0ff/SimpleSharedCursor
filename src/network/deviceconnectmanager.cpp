@@ -7,6 +7,7 @@ DeviceConnectManager::DeviceConnectManager(QObject *parent)
     : QObject{parent}
 {
     qDebug() << Q_FUNC_INFO;
+    jsonRemoteControl[SharedCursor::KEY_TYPE] = SharedCursor::KEY_REMOTE_CONTROL;
 }
 
 DeviceConnectManager::~DeviceConnectManager()
@@ -103,11 +104,8 @@ void DeviceConnectManager::sendMessage(const QUuid &uuid, const QJsonObject &jso
 
 void DeviceConnectManager::sendRemoteControlMessage(const QUuid &master, const QUuid &slave)
 {
-    jsonRemoteControl[SharedCursor::KEY_TYPE] = SharedCursor::KEY_REMOTE_CONTROL;
     jsonRemoteControl[SharedCursor::KEY_MASTER] = master.toString();
     jsonRemoteControl[SharedCursor::KEY_SLAVE] = slave.toString();
-
-    qDebug() << Q_FUNC_INFO << jsonRemoteControl;
 
     for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
         if (it.key() != _uuid && !it.value().isNull()) {
@@ -178,7 +176,6 @@ void DeviceConnectManager::onSocketConnected(qintptr socketDescriptor)
 
 void DeviceConnectManager::onMessageReceived(const QUuid &uuid, const QJsonObject &json)
 {
-    Q_UNUSED(uuid);
     const QString &type = json.value(SharedCursor::KEY_TYPE).toString();
 
     if (type == SharedCursor::KEY_REMOTE_CONTROL) {
