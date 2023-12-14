@@ -42,7 +42,7 @@ void BroadcastDeviceSearch::search()
 
     SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_SEARCH_REQUEST);
     SharedCursor::convertJsonToArray(jsonOut, datagram);
-    sslWraper.encrypt(datagram, datagramEnc);
+    sslWraper.encrypt(datagram.constData(), datagram.size(), datagramEnc);
     udpSocket.writeDatagram(datagramEnc, QHostAddress::Broadcast, port);
 }
 
@@ -80,7 +80,7 @@ void BroadcastDeviceSearch::onSocketReadyRead()
 
 void BroadcastDeviceSearch::onNewData(const QHostAddress &host, quint16 port, const QByteArray &data)
 {
-    sslWraper.decrypt(data, datagram);
+    sslWraper.decrypt(data.constData(), data.size(), datagram);
     if (!SharedCursor::convertArrayToJson(datagram, jsonIn)) return;
 
     qDebug() << Q_FUNC_INFO << host << port << jsonIn;
@@ -109,7 +109,7 @@ void BroadcastDeviceSearch::handleSearchRequest(const QHostAddress &host, const 
     SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_SEARCH_RESPONSE);
     SharedCursor::convertJsonToArray(jsonOut, datagram);
 
-    sslWraper.encrypt(datagram, datagramEnc);
+    sslWraper.encrypt(datagram.constData(), datagram.size(), datagramEnc);
     udpSocket.writeDatagram(datagramEnc, host, port);
     emit deviceFound(jObject);
 }
