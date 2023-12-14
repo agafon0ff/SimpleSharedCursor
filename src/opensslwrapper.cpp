@@ -1,74 +1,65 @@
 #include "opensslwrapper.h"
 
-#include <QtEndian>
-#include <QRandomGenerator>
-#include <openssl/aes.h>
+#include <openssl/evp.h>
+#include <memory>
 
-static const int AESKeySize = 256;
-static const int LengthSize = 4;
+static const int BLOCK_SIZE = 16;
+static const int EVP_KEY_SIZE = 32;
 
-OpenSslWrapper::OpenSslWrapper()
-    : initVector(AES_BLOCK_SIZE, Qt::Uninitialized)
+void OpenSslWrapper::setKey(const QByteArray &_key)
 {
+    key.resize(EVP_KEY_SIZE);
+    std::iota(key.begin(), key.end(), 0x00);
+    std::copy(_key.data(), _key.data() + ((_key.size() < EVP_KEY_SIZE) ? _key.size() : EVP_KEY_SIZE), key.begin());
+
+    iv = "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x30\x31\x32\x33\x34\x35";
+    std::copy(_key.data(), _key.data() + ((_key.size() < iv.size()) ? _key.size() : iv.size()), iv.begin());
 }
 
-void OpenSslWrapper::setKey(const QByteArray &key)
+bool OpenSslWrapper::encrypt(const char *input, int size, QByteArray &output)
 {
-    const int keySize = 32;
-    QByteArray result("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x30\x31", keySize);
-    std::copy(key.data(), key.data() + ((key.size() < keySize) ? key.size() : keySize), result.begin());
-    AES_set_encrypt_key(reinterpret_cast<const unsigned char *>(result.data()), AESKeySize, &eKey);
-    AES_set_decrypt_key(reinterpret_cast<const unsigned char *>(result.data()), AESKeySize, &dKey);
+    std::unique_ptr<EVP_CIPHER_CTX, decltype(&::EVP_CIPHER_CTX_free)> ctx(EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free);
+
+    int rc = EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_cbc(), NULL,
+                                reinterpret_cast<const unsigned char*>(key.constData()),
+                                reinterpret_cast<const unsigned char*>(iv.constData()));
+    if (rc != 1) return false;
+
+    output.resize(size + BLOCK_SIZE);
+    int out_len1 = output.size();
+
+    rc = EVP_EncryptUpdate(ctx.get(), reinterpret_cast<unsigned char*>(output.data()), &out_len1,
+                           reinterpret_cast<const unsigned char*>(input), size);
+    if (rc != 1) return false;
+
+    int out_len2 = output.size() - out_len1;
+    rc = EVP_EncryptFinal_ex(ctx.get(), reinterpret_cast<unsigned char*>(output.data()) + out_len1, &out_len2);
+    if (rc != 1) return false;
+
+    output.resize(out_len1 + out_len2);
+    return true;
 }
 
-void OpenSslWrapper::encrypt(const QByteArray& input, QByteArray &output)
+bool OpenSslWrapper::decrypt(const char *input, int size, QByteArray &output)
 {
-    quint32 size = input.size();
-    int encryptionLength = size + LengthSize;
-    if (encryptionLength % AES_BLOCK_SIZE != 0) {
-        encryptionLength = ((encryptionLength / AES_BLOCK_SIZE) + 1) * AES_BLOCK_SIZE;
-    }
+    std::unique_ptr<EVP_CIPHER_CTX, decltype(&::EVP_CIPHER_CTX_free)> ctx(EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free);
 
-    inputData.resize(size + LengthSize);
-    qToBigEndian(size, inputData.data());
-    memcpy(inputData.data() + LengthSize, input, size);
-    memset(inputData.data() + size + LengthSize, 0, encryptionLength - (size + LengthSize));
-
-    QRandomGenerator::global()->generate(initVector.begin(), initVector.end());
-
-    output.resize(encryptionLength + AES_BLOCK_SIZE);
-    memcpy(output.data(), initVector, AES_BLOCK_SIZE);
-
-    AES_cbc_encrypt(reinterpret_cast<const unsigned char *>(inputData.data()),
-                    reinterpret_cast<unsigned char *>(output.data() + AES_BLOCK_SIZE),
-                    inputData.size(), &eKey, reinterpret_cast<unsigned char *>(initVector.data()), AES_ENCRYPT);
-}
-
-bool OpenSslWrapper::decrypt(const QByteArray &input, QByteArray &output)
-{
-    return decrypt(input.data(), input.size(), output);
-}
-
-bool OpenSslWrapper::decrypt(const char *input, int _size, QByteArray &output)
-{
-    output.clear();
-
-    if (_size < AES_BLOCK_SIZE) return false;
-    if (_size % AES_BLOCK_SIZE != 0) return false;
-
-    memcpy(initVector.data(), input, AES_BLOCK_SIZE);
-    decrypted.resize(_size);
-
-    AES_cbc_encrypt(reinterpret_cast<const unsigned char *>(input + AES_BLOCK_SIZE),
-                    reinterpret_cast<unsigned char *>(decrypted.data()),
-                    _size - AES_BLOCK_SIZE, &dKey, reinterpret_cast<unsigned char *>(initVector.data()), AES_DECRYPT);
-
-    quint32 size = qFromBigEndian<quint32>(decrypted.data());
-
-    if (size > static_cast<quint32>(decrypted.size() + LengthSize))
-        return false;
+    int rc = EVP_DecryptInit_ex(ctx.get(), EVP_aes_256_cbc(), NULL,
+                            reinterpret_cast<const unsigned char*>(key.constData()),
+                            reinterpret_cast<const unsigned char*>(iv.constData()));
+    if (rc != 1) return false;
 
     output.resize(size);
-    memcpy(output.data(), decrypted.data() + LengthSize, size);
+    int out_len1 = output.size();
+
+    rc = EVP_DecryptUpdate(ctx.get(), reinterpret_cast<unsigned char*>(output.data()), &out_len1,
+                           reinterpret_cast<const unsigned char*>(input), size);
+    if (rc != 1) return false;
+
+    int out_len2 = output.size() - out_len1;
+    rc = EVP_DecryptFinal_ex(ctx.get(), reinterpret_cast<unsigned char*>(output.data()) + out_len1, &out_len2);
+    if (rc != 1) return false;
+
+    output.resize(out_len1 + out_len2);
     return true;
 }

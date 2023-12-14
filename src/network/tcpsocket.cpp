@@ -91,7 +91,7 @@ void TcpSocket::sendMessage(const QJsonObject &json)
 {
     if (state() == QTcpSocket::ConnectedState) {
         SharedCursor::convertJsonToArray(json, dataOut);
-        sslWraper.encrypt(dataOut, dataOutEnc);
+        sslWraper.encrypt(dataOut.constData(), dataOut.size(), dataOutEnc);
         appendDataSizeToOutBuffer();
         write(dataOutEnc);
     }
