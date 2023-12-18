@@ -7,6 +7,7 @@
 #include <QDebug>
 
 #include "inputhandler.h"
+#include "global.h"
 
 InputHandler::InputHandler(QWidget *parent)
     : QWidget{parent}
@@ -43,6 +44,15 @@ void InputHandler::setRemoteControlState(const QUuid &master, const QUuid &slave
     else {
         hide();
     }
+}
+
+void InputHandler::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    p.setPen(Qt::NoPen);
+    p.setBrush(QBrush({0, 0, 0, 1}));
+    p.drawRect(0, 0, width(), height());
+    p.end();
 }
 
 bool InputHandler::event(QEvent *event)

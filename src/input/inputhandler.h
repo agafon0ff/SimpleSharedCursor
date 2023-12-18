@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <QEvent>
 #include <QUuid>
-#include "utils.h"
 
 class InputHandler : public QWidget
 {
@@ -25,6 +24,8 @@ private:
     QUuid ownUuid, remoteUuid;
     QJsonObject jsonKey;
     QVector<int> pressedKeys;
+
+    void paintEvent(QPaintEvent *e);
 
     bool event(QEvent *event) override;
     void sendKeyEventMessage(int keycode, bool pressed);
