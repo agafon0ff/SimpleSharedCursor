@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
     InputHandler inputHandler;
     inputHandler.setUuid(Settings.uuid());
-    inputHandler.setGeometry(Settings.screenRect().adjusted(50, 50, -50, -50));
+    inputHandler.setGeometry(Settings.screenRect().adjusted(150, 150, -150, -150));
     inputHandler.setCenterIn(Settings.screenRect().center());
 
     InputSimulator inputSimulator;
@@ -107,7 +107,6 @@ int main(int argc, char *argv[])
     QObject::connect(&devConnectManager, &DeviceConnectManager::remoteControl, &clipboardHandler, &ClipboardHandler::setRemoteControlState);
     QObject::connect(&devConnectManager, &DeviceConnectManager::clipboard, &clipboardHandler, &ClipboardHandler::setClipboard);
     QObject::connect(&clipboardHandler, &ClipboardHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
-
 
     cursorCheckerThread.start();
     devConnectManagerThread.start();
