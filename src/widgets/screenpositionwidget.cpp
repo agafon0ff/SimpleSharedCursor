@@ -26,7 +26,7 @@ QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
 
 void ScreenPositionWidget::addDevice(QSharedPointer<SharedCursor::Device> device)
 {
-    for (const QRect &rect: qAsConst(device->screens)) {
+    for (const QRect &rect: std::as_const(device->screens)) {
         ScreenRectItem *item = createRect(rect, device->position);
         item->setText(device->name);
         item->setUuid(device->uuid);
@@ -36,7 +36,7 @@ void ScreenPositionWidget::addDevice(QSharedPointer<SharedCursor::Device> device
 
 void ScreenPositionWidget::removeDevice(const QUuid &uuid)
 {
-    for (ScreenRectItem *item: qAsConst(items)) {
+    for (ScreenRectItem *item: std::as_const(items)) {
         if (item->uuid() == uuid) {
             disconnect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
             disconnect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
@@ -50,7 +50,7 @@ void ScreenPositionWidget::removeDevice(const QUuid &uuid)
 
 void ScreenPositionWidget::clearWidget()
 {
-    for (ScreenRectItem *item: qAsConst(items)) {
+    for (ScreenRectItem *item: std::as_const(items)) {
         item->disconnect();
         item->deleteLater();
     }
@@ -59,7 +59,7 @@ void ScreenPositionWidget::clearWidget()
 
 void ScreenPositionWidget::normalize()
 {
-     for (ScreenRectItem *item: qAsConst(items)) {
+     for (ScreenRectItem *item: std::as_const(items)) {
          item->setPos(item->pos() - minPos);
      }
      calculateTransits();
@@ -67,7 +67,7 @@ void ScreenPositionWidget::normalize()
 
 void ScreenPositionWidget::onItemPositionChanged(ScreenRectItem *_item, const QPointF &dpos)
 {
-    for (ScreenRectItem *item: qAsConst(items)) {
+    for (ScreenRectItem *item: std::as_const(items)) {
         if (_item == item) continue;
         if (item->uuid() == _item->uuid()) {
             item->setPos(item->pos() + dpos);
@@ -108,12 +108,12 @@ void ScreenPositionWidget::calculateSceneRect()
 
 void ScreenPositionWidget::calculateTransits()
 {
-    for (ScreenRectItem *item: qAsConst(items)) {
+    for (ScreenRectItem *item: std::as_const(items)) {
         item->clearTransits();
     }
 
-    for (ScreenRectItem *from: qAsConst(items)) {
-        for (ScreenRectItem *to: qAsConst(items)) {
+    for (ScreenRectItem *from: std::as_const(items)) {
+        for (ScreenRectItem *to: std::as_const(items)) {
             if (from == to) continue;
             if (from->uuid() == to->uuid()) continue;
             calculateTransitsTopBottom(from, to);

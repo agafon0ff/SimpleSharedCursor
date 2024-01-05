@@ -161,7 +161,7 @@ void SettingsWidget::onBtnOkClicked()
 
     emit transitsChanged(Settings.transits());
 
-    for (const QUuid &uuid: qAsConst(removeList)) {
+    for (const QUuid &uuid: std::as_const(removeList)) {
         Settings.removeDevice(uuid);
         emit removeDevice(uuid);
     }

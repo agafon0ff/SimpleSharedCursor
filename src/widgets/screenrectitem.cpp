@@ -98,7 +98,7 @@ void ScreenRectItem::paint(QPainter *p, const QStyleOptionGraphicsItem *item, QW
 
     p->setPen(QPen(QBrush(QColor(255, 0, 0)), penWidth));
 
-    for (const auto &transit: qAsConst(_transits)) {
+    for (const auto &transit: std::as_const(_transits)) {
         p->drawLine(transit.line);
     }
 }
