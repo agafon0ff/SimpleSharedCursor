@@ -18,6 +18,11 @@ TcpSocket::TcpSocket(QObject *parent)
 TcpSocket::~TcpSocket()
 {
     qDebug() << Q_FUNC_INFO;
+
+    disconnect(this, &QTcpSocket::readyRead, this, &TcpSocket::onReadyRead);
+    disconnect(this, &QTcpSocket::connected, this, &TcpSocket::onConnected);
+    disconnect(this, &QTcpSocket::disconnected, this, &TcpSocket::onDisconnected);
+
     stop();
 }
 
@@ -142,12 +147,13 @@ void TcpSocket::parseInputData(const QByteArray &data)
         messageType = jsonIn.value(SharedCursor::KEY_TYPE).toString();
 
         if (messageType == SharedCursor::KEY_CONNECT_REQUEST) {
-            _isConnected = true;
             onConnectRequestReceived();
         }
         else if (messageType == SharedCursor::KEY_CONNECT_RESPONSE) {
-            _isConnected = true;
-            emit deviceConnected(this, jsonIn);
+            if (!_isConnected) {
+                _isConnected = true;
+                emit deviceConnected(this, jsonIn);
+            }
         }
     }
 }
@@ -175,16 +181,21 @@ void TcpSocket::onConnected()
 
 void TcpSocket::onDisconnected()
 {
-    _isConnected = false;
-    emit deviceDisconnected(this);
+    if (_isConnected) {
+        _isConnected = false;
+        emit deviceDisconnected(this);
+    }
 }
 
 void TcpSocket::onConnectRequestReceived()
 {
     if (uuid.isNull())
         uuid = QUuid::fromString(jsonIn.value(SharedCursor::KEY_UUID).toString());
-
-    emit deviceConnected(this, jsonIn);
+    
+    if (!_isConnected) {
+        _isConnected = true;
+        emit deviceConnected(this, jsonIn);
+    }
 
     SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_CONNECT_RESPONSE);
     sendMessage(jsonOut);

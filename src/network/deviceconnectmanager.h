@@ -60,6 +60,10 @@ private:
 
     QJsonObject devicePtrToJsonObject(QSharedPointer<SharedCursor::Device> device);
     QSharedPointer<SharedCursor::Device> jsonObjectToDevicePtr(const QJsonObject &obj);
-    QSharedPointer<TcpSocket> createTempSocket();
+
+    QSharedPointer<TcpSocket> createSocket();
+    void disconnectSocket(QSharedPointer<TcpSocket> socket);
+
+    void pushTempSocket(QSharedPointer<TcpSocket> socket);
     QSharedPointer<TcpSocket> popTempSocket(TcpSocket* socket);
 };
