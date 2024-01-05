@@ -5,6 +5,8 @@ CONFIG += lrelease
 CONFIG += embed_translations
 
 TEMPLATE = app
+RC_FILE = img/icon.rc
+
 QMAKE_LFLAGS += -no-pie
 QMAKE_CXXFLAGS_RELEASE += -O2
 
@@ -64,7 +66,10 @@ RESOURCES += \
 TRANSLATIONS += \
     tr/ShareCursor_en.ts
 
-LIBS += -lcrypto
+
+win32: \
+    INCLUDEPATH += "C:/Program Files (x86)/OpenSSL-Win32/include"
+    LIBS += "C:/Program Files (x86)/OpenSSL-Win32/bin/libcrypto-3.dll"
 
 linux-g++: \
-    LIBS += -lX11 -lXtst
+    LIBS += -lX11 -lXtst -lcrypto
