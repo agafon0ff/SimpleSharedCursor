@@ -184,7 +184,7 @@ void InputSimulator::releasePressedKey()
 #ifdef Q_OS_UNIX
     Display *display = XOpenDisplay(nullptr);
 
-    for (unsigned char code: qAsConst(pressedKeys)) {
+    for (unsigned char code: std::as_const(pressedKeys)) {
         XTestFakeKeyEvent(display, code, False, 0);
     }
 

@@ -68,7 +68,7 @@ TRANSLATIONS += \
 
 
 win32: \
-    INCLUDEPATH += "C:/Program Files (x86)/OpenSSL-Win32/include"
+    INCLUDEPATH += "C:/Program Files (x86)/OpenSSL-Win32/include" \
     LIBS += "C:/Program Files (x86)/OpenSSL-Win32/bin/libcrypto-3.dll"
 
 linux-g++: \
