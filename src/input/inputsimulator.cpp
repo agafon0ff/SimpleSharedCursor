@@ -24,7 +24,7 @@ void InputSimulator::setControlState(SharedCursor::ControlState state)
 {
     if (controlState != state) {
         if (controlState == SharedCursor::Slave) {
-            releasePressedKey();
+            releasePressedKeys();
         }
         controlState = state;
     }
@@ -42,9 +42,10 @@ void InputSimulator::setCutsorDelta(const QPoint &pos)
 
 void InputSimulator::setKeyboardEvent(int keycode, bool state)
 {
-    Qt::Key key = static_cast<Qt::Key>(keycode);
-    qDebug() << Q_FUNC_INFO << key << state;
-
+    if (!releaseProcess) {
+        if (state) pressedKeys.append(keycode);
+        else pressedKeys.removeOne(keycode);
+    }
 
 #ifdef Q_OS_UNIX
     Display *display = XOpenDisplay(nullptr);
@@ -59,15 +60,7 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
         code = static_cast<unsigned char>(keycode);
     }
 
-    if (state) {
-        XTestFakeKeyEvent(display, code, True, 0);
-        pressedKeys.append(code);
-    }
-    else {
-        XTestFakeKeyEvent(display, code, False, 0);
-        pressedKeys.removeOne(code);
-    }
-
+    XTestFakeKeyEvent(display, code, state, 0);
     XFlush(display);
     XCloseDisplay(display);
 #endif
@@ -89,11 +82,9 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
 
     if (state) {
         ip.ki.dwFlags = 0;
-        pressedKeys.append(static_cast<unsigned short>(keycode));
     }
     else {
         ip.ki.dwFlags = KEYEVENTF_KEYUP;
-        pressedKeys.removeOne(static_cast<unsigned short>(keycode));
     }
 
     SendInput(1, &ip, sizeof(INPUT));
@@ -102,6 +93,11 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
 
 void InputSimulator::setMouseEvent(int button, bool state)
 {
+    if (!releaseProcess) {
+        if (state) pressedMouse.append(button);
+        else pressedMouse.removeOne(button);
+    }
+
 #ifdef Q_OS_UNIX
     Display *display = XOpenDisplay(nullptr);
 
@@ -175,36 +171,23 @@ void InputSimulator::setWheelEvent(int delta)
 #endif
 }
 
-void InputSimulator::releasePressedKey()
+void InputSimulator::releasePressedKeys()
 {
-    if (pressedKeys.empty()) {
-        return;
+    releaseProcess = true;
+
+    if (!pressedKeys.empty()) {
+        for (int code: std::as_const(pressedKeys)) {
+            setKeyboardEvent(code, false);
+        }
     }
 
-#ifdef Q_OS_UNIX
-    Display *display = XOpenDisplay(nullptr);
-
-    for (unsigned char code: std::as_const(pressedKeys)) {
-        XTestFakeKeyEvent(display, code, False, 0);
+    if (!pressedMouse.empty()) {
+        for (int button: std::as_const(pressedMouse)) {
+            setMouseEvent(button, false);
+        }
     }
 
-    XFlush(display);
-    XCloseDisplay(display);
-#endif
-
-#ifdef Q_OS_WIN
-    INPUT ip;
-    ip.type = INPUT_KEYBOARD;
-    ip.ki.wScan = 0;
-    ip.ki.time = 0;
-    ip.ki.dwExtraInfo = 0;
-    ip.ki.dwFlags = KEYEVENTF_KEYUP;
-
-    for (unsigned short code: qAsConst(pressedKeys)) {
-        ip.ki.wVk = code;
-        SendInput(1, &ip, sizeof(INPUT));
-    }
-#endif
+    releaseProcess = false;
 }
 
 void InputSimulator::createKeymap()

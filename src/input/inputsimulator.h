@@ -24,13 +24,10 @@ private:
     QMap<int, unsigned long> keymap;
     SharedCursor::ControlState controlState = SharedCursor::SelfControl;
 
-#ifdef Q_OS_UNIX
-    QVector<unsigned char> pressedKeys;
-#endif
-#ifdef Q_OS_WIN
-    QVector<unsigned short> pressedKeys;
-#endif
+    bool releaseProcess = false;
+    QVector<int> pressedKeys;
+    QVector<int> pressedMouse;
 
-    void releasePressedKey();
+    void releasePressedKeys();
     void createKeymap();
 };
