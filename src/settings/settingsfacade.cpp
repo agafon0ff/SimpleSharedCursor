@@ -125,6 +125,11 @@ void SettingsFacade::setPortUdp(quint16 port)
     _portUdp = port;
 }
 
+void SettingsFacade::clearDevices()
+{
+    _devices.clear();
+}
+
 void SettingsFacade::setDevice(const QJsonObject &obj)
 {
     const QUuid &uuid = QUuid::fromString(obj.value(SharedCursor::KEY_UUID).toString());
@@ -143,25 +148,23 @@ void SettingsFacade::setDevice(const QJsonObject &obj)
 
 void SettingsFacade::removeDevice(const QUuid &uuid)
 {
-    if (_devices.contains(uuid)) {
-        _devices.remove(uuid);
-    }
+    _devices.remove(uuid);
 }
 
 void SettingsFacade::setDevicePosition(const QUuid &uuid, const QPoint &pos)
 {
-    if (!_devices.contains(uuid))
-        return;
-
-    _devices.value(uuid)->position = pos;
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
+        it.value()->position = pos;
+    }
 }
 
 void SettingsFacade::setDeviceConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state)
 {
-    if (!_devices.contains(uuid))
-        return;
-
-    _devices.value(uuid)->state = state;
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
+        it.value()->state = state;
+    }
 }
 
 void SettingsFacade::clearTransits()
@@ -175,18 +178,18 @@ void SettingsFacade::clearTransits()
 
 void SettingsFacade::setTransitsToDevice(const QUuid &uuid, const QVector<SharedCursor::Transit> &transits)
 {
-    if (!_devices.contains(uuid))
-        return;
-
-    _devices.value(uuid)->transits = transits;
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
+        it.value()->transits = transits;
+    }
 }
 
 void SettingsFacade::addTransitsToDevice(const QUuid &uuid, const QVector<SharedCursor::Transit> &transits)
 {
-    if (!_devices.contains(uuid))
-        return;
-
-    _devices.value(uuid)->transits.append(transits);
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
+        it.value()->transits.append(transits);
+    }
 }
 
 void SettingsFacade::setValue(const char *key, const QJsonValue &value)

@@ -33,6 +33,8 @@ public slots:
     void setKeyword(const QString &keyword);
     void setPortTcp(quint16 port);
     void setPortUdp(quint16 port);
+
+    void clearDevices();
     void setDevicePosition(const QUuid &uuid, const QPoint &pos);
     void setDeviceConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state);
 

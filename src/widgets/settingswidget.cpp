@@ -7,7 +7,6 @@
 
 #include "settingswidget.h"
 #include "settingsfacade.h"
-#include "utils.h"
 
 SettingsWidget::SettingsWidget(QWidget *parent)
     : QWidget(parent)
@@ -16,7 +15,7 @@ SettingsWidget::SettingsWidget(QWidget *parent)
     ui->setupUi(this);
     setWindowIcon(QIcon("://img/SharedCursor.ico"));
 
-    connect(ui->btnFindDevices, &QPushButton::clicked, this, &SettingsWidget::findDevices);
+    connect(ui->btnFindDevices, &QPushButton::clicked, this, &SettingsWidget::onBtnFindDevicesClicked);
     connect(ui->btnOk, &QPushButton::clicked, this, &SettingsWidget::onBtnOkClicked);
     connect(ui->btnCancel, &QPushButton::clicked, this, &SettingsWidget::onBtnCancelClicked);
 
@@ -41,6 +40,7 @@ void SettingsWidget::initialize()
     ui->lineEditKeyword->setText(Settings.keyword());
     ui->lineDeviceName->setText(Settings.name());
 
+    Settings.loadDevices();
     const QMap<QUuid, QSharedPointer<SharedCursor::Device>> &devices = Settings.devices();
     for (auto i = devices.constBegin(); i != devices.constEnd(); ++i) {
         createFoundDeviceWidget(i.value());
@@ -137,6 +137,15 @@ void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
 
     positioningWidget->removeDevice(uuid);
     removeList.append(uuid);
+}
+
+void SettingsWidget::onBtnFindDevicesClicked()
+{
+    Settings.clearDevices();
+    clearWidget();
+    emit findDevices();
+
+    createFoundDeviceWidget(Settings.device(Settings.uuid()));
 }
 
 void SettingsWidget::onBtnOkClicked()

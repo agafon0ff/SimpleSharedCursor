@@ -71,13 +71,15 @@ void DeviceConnectManager::connectToDevice(const QUuid &uuid, const QHostAddress
 {
     qDebug() << Q_FUNC_INFO << uuid << host;
 
-    if (uuid.isNull() || uuid == _uuid)
+    if (uuid.isNull() || uuid == _uuid) {
         return;
+    }
 
     auto it = devices.find(uuid);
     if (it != devices.end()) {
         QSharedPointer<TcpSocket> socket = devices.value(uuid);
         if(!socket.isNull() && socket->isConnected()) {
+            emit deviceConnectionChanged(uuid, SharedCursor::Connected);
             return;
         } else {
             it.value().clear();
