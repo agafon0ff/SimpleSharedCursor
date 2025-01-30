@@ -92,9 +92,13 @@ void ScreenRectItem::paint(QPainter *p, const QStyleOptionGraphicsItem *item, QW
     p->drawRect(rect());
 
     _font = p->font();
-    _font.setPixelSize(penWidth * 8);
+    _font.setPixelSize(penWidth * 7);
+
+    QFontMetrics fm(_font);
+    QString eText = fm.elidedText(_text, Qt::ElideRight, static_cast<int>(rect().width()));
+
     p->setFont(_font);
-    p->drawText(rect().adjusted(penWidth, 0, 0, 0), Qt::AlignLeft | Qt::AlignTop, _text);
+    p->drawText(rect().adjusted(penWidth + 2, 2, 0, 0), Qt::AlignLeft | Qt::AlignTop, eText);
 
     p->setPen(QPen(QBrush(QColor(255, 0, 0)), penWidth));
 
