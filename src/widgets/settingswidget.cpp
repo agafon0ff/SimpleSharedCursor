@@ -141,7 +141,7 @@ void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
 
 void SettingsWidget::onBtnFindDevicesClicked()
 {
-    Settings.clearDevices();
+    Settings.resetDevices();
     clearWidget();
     emit findDevices();
 

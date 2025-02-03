@@ -130,6 +130,15 @@ void SettingsFacade::clearDevices()
     _devices.clear();
 }
 
+void SettingsFacade::resetDevices()
+{
+    QSharedPointer<SharedCursor::Device> self = _devices.value(_uuid);
+    _devices.clear();
+
+    _devices.insert(_uuid, self);
+    emit deviceFound(_uuid, self->host);
+}
+
 void SettingsFacade::setDevice(const QJsonObject &obj)
 {
     const QUuid &uuid = QUuid::fromString(obj.value(SharedCursor::KEY_UUID).toString());
