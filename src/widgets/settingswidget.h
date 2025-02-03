@@ -46,6 +46,7 @@ private:
 
     void createFoundDeviceWidget(QSharedPointer<SharedCursor::Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);
+    void onBtnFindDevicesClicked();
     void onBtnOkClicked();
     void onBtnCancelClicked();
 
