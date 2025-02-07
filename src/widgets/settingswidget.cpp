@@ -137,18 +137,10 @@ void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
 
     positioningWidget->removeDevice(uuid);
     removeList.append(uuid);
+    Settings.removeDevice(uuid);
 }
 
-void SettingsWidget::onBtnFindDevicesClicked()
-{
-    Settings.resetDevices();
-    clearWidget();
-    emit findDevices();
-
-    createFoundDeviceWidget(Settings.device(Settings.uuid()));
-}
-
-void SettingsWidget::onBtnOkClicked()
+void SettingsWidget::saveSettings()
 {
     if (Settings.name() != ui->lineDeviceName->text()) {
         Settings.setName(ui->lineDeviceName->text());
@@ -157,7 +149,7 @@ void SettingsWidget::onBtnOkClicked()
 
     if (Settings.keyword() != ui->lineEditKeyword->text()) {
         Settings.setKeyword(ui->lineEditKeyword->text());
-        emit nameChanged(Settings.keyword());
+        emit keywordChanged(Settings.keyword());
     }
 
     Settings.clearTransits();
@@ -176,7 +168,20 @@ void SettingsWidget::onBtnOkClicked()
     }
 
     Settings.save();
+}
 
+void SettingsWidget::onBtnFindDevicesClicked()
+{
+    Settings.resetDevices();
+    clearWidget();
+    emit findDevices();
+
+    createFoundDeviceWidget(Settings.device(Settings.uuid()));
+}
+
+void SettingsWidget::onBtnOkClicked()
+{
+    saveSettings();
     clearWidget();
     hide();
 }
@@ -185,6 +190,11 @@ void SettingsWidget::onBtnCancelClicked()
 {
     hide();
     clearWidget();
+}
+
+void SettingsWidget::onBtnApplyClicked()
+{
+    saveSettings();
 }
 
 void SettingsWidget::showEvent(QShowEvent *)

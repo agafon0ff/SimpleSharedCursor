@@ -42,7 +42,6 @@ void ScreenPositionWidget::removeDevice(const QUuid &uuid)
             disconnect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
             items.removeOne(item);
             item->deleteLater();
-            break;
         }
     }
     calculateSceneRect();
