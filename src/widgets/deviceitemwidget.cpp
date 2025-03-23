@@ -1,20 +1,48 @@
 #include "deviceitemwidget.h"
-#include "ui_deviceitemwidget.h"
 
 DeviceItemWidget::DeviceItemWidget(QWidget *parent) :
     QWidget(parent),
-    ui{new Ui::DeviceItemWidget},
     pixmapConnected{"://img/connected.png"},
     pixmapDisconnected{"://img/disconnected.png"}
 {
-    ui->setupUi(this);
+    setMinimumHeight(30);
+    setMaximumHeight(30);
 
-    connect(ui->btnRemove, &QPushButton::clicked, this, [this]{ emit removeClicked(uuid); });
+    setLayout(&horizontalLayout);
+    horizontalLayout.setSpacing(0);
+    horizontalLayout.setContentsMargins(0, 0, 0, 0);
+
+    labelStatus.setMinimumSize(QSize(30, 30));
+    labelStatus.setMaximumSize(QSize(30, 30));
+    labelStatus.setPixmap(QPixmap(":/img/disconnected.png"));
+    labelStatus.setScaledContents(true);
+    labelStatus.setAlignment(Qt::AlignCenter);
+    labelStatus.setMargin(3);
+    horizontalLayout.addWidget(&labelStatus);
+
+    labelName.setObjectName(QString::fromUtf8("labelName"));
+    labelName.setAlignment(Qt::AlignCenter);
+    horizontalLayout.addWidget(&labelName);
+
+    labelHost.setObjectName(QString::fromUtf8("labelHost"));
+    labelHost.setAlignment(Qt::AlignCenter);
+    horizontalLayout.addWidget(&labelHost);
+
+    btnRemove.setObjectName(QString::fromUtf8("btnRemove"));
+    btnRemove.setMinimumSize(QSize(27, 27));
+    btnRemove.setMaximumSize(QSize(27, 27));
+    btnRemove.setIcon(QIcon(":/img/cross.png"));
+    btnRemove.setFlat(true);
+    horizontalLayout.addWidget(&btnRemove);
+
+    horizontalLayout.setStretch(1, 2);
+    horizontalLayout.setStretch(2, 1);
+
+    connect(&btnRemove, &QPushButton::clicked, this, [this]{ emit removeClicked(uuid); });
 }
 
 DeviceItemWidget::~DeviceItemWidget()
 {
-    delete ui;
 }
 
 void DeviceItemWidget::setUuid(const QUuid &_uuid)
@@ -29,12 +57,12 @@ QUuid DeviceItemWidget::getUuid() const
 
 void DeviceItemWidget::setName(const QString &name)
 {
-    ui->labelName->setText(name);
+    labelName.setText(name);
 }
 
 void DeviceItemWidget::setHost(const QHostAddress &host)
 {
-    ui->labelHost->setText(QHostAddress(host.toIPv4Address()).toString());
+    labelHost.setText(QHostAddress(host.toIPv4Address()).toString());
 }
 
 void DeviceItemWidget::setState(SharedCursor::ConnectionState _state)
@@ -42,16 +70,25 @@ void DeviceItemWidget::setState(SharedCursor::ConnectionState _state)
     state = _state;
     switch(state) {
     case SharedCursor::Unknown:
-        ui->labelStatus->setPixmap(pixmapDisconnected);
+        labelStatus.setPixmap(pixmapDisconnected);
         break;
     case SharedCursor::Disconnected:
-        ui->labelStatus->setPixmap(pixmapDisconnected);
+        labelStatus.setPixmap(pixmapDisconnected);
         break;
     case SharedCursor::Connected:
-        ui->labelStatus->setPixmap(pixmapConnected);
+        labelStatus.setPixmap(pixmapConnected);
         break;
     case SharedCursor::Waiting:
-        ui->labelStatus->setPixmap(pixmapDisconnected);
+        labelStatus.setPixmap(pixmapDisconnected);
         break;
     }
+}
+
+void DeviceItemWidget::setSelfState(bool self)
+{
+    selfState = self;
+    btnRemove.setVisible(!self);
+
+    if (self)
+        labelStatus.setPixmap(pixmapConnected);
 }

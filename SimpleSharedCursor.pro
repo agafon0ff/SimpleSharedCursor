@@ -57,7 +57,6 @@ HEADERS += \
     src/widgets/traymenu.h
 
 FORMS += \
-    src/widgets/deviceitemwidget.ui \
     src/widgets/settingswidget.ui
 
 RESOURCES += \

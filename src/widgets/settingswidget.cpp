@@ -93,26 +93,33 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<SharedCursor::Device
     if (device.isNull())
         return;
 
-    qDebug() << Q_FUNC_INFO << device->uuid << device->name;
+    qDebug() << Q_FUNC_INFO << device->uuid << device->name << device->self;
 
-    if (!device->self && !deviceWidgets.contains(device->uuid)) {
-        DeviceItemWidget *widget = new DeviceItemWidget(this);
-        widget->setUuid(device->uuid);
-        widget->setName(device->name);
-        widget->setHost(device->host);
-        widget->setState(device->state);
+    if (deviceWidgets.contains(device->uuid))
+        return;
 
-        deviceWidgets.insert(device->uuid, widget);
+    // if (!device->self)
+    // {
 
-        QListWidgetItem *listItem = new QListWidgetItem(ui->listWidgetDevices);
-        listItem->setSizeHint(widget->sizeHint());
+    DeviceItemWidget *widget = new DeviceItemWidget(this);
+    widget->setUuid(device->uuid);
+    widget->setName(device->name);
+    widget->setHost(device->host);
+    widget->setState(device->state);
+    widget->setSelfState(device->self);
 
-        listIitemWidgets.insert(device->uuid, listItem);
-        ui->listWidgetDevices->addItem(listItem);
-        ui->listWidgetDevices->setItemWidget(listItem, widget);
+    deviceWidgets.insert(device->uuid, widget);
 
-        connect(widget, &DeviceItemWidget::removeClicked, this, &SettingsWidget::removeDeviceFromListWidget);
-    }
+    QListWidgetItem *listItem = new QListWidgetItem;
+    listItem->setSizeHint(widget->sizeHint());
+
+    listIitemWidgets.insert(device->uuid, listItem);
+
+    ui->listWidgetDevices->insertItem((device->self ? 0 : ui->listWidgetDevices->count()), listItem);
+    ui->listWidgetDevices->setItemWidget(listItem, widget);
+
+    connect(widget, &DeviceItemWidget::removeClicked, this, &SettingsWidget::removeDeviceFromListWidget);
+    // }
 
     positioningWidget->addDevice(device);
 }
