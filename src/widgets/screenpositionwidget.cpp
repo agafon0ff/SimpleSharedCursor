@@ -80,17 +80,25 @@ void ScreenPositionWidget::calculateSceneRect()
         return;
 
     ScreenRectItem *item = items.at(0);
-    qreal x = item->x(), y = item->y();
+    qreal x = item->x() + item->rect().x();
+    qreal y = item->y() + item->rect().y();
     qreal w = item->x() + item->rect().right();
     qreal h = item->y() + item->rect().bottom();
     qreal indent = item->rect().height();
 
     for (int i=1; i<items.size(); ++i) {
         item = items.at(i);
-        if (item->x() < x) x = item->x();
-        if (item->y() < y) y = item->y();
-        if (item->rect().right() + item->x() > w) w = item->rect().right() + item->x();
-        if (item->rect().bottom() + item->y() > h) h = item->rect().bottom() + item->y();
+
+        qreal itX = item->x() + item->rect().x();
+        qreal itY = item->y() + item->rect().y();
+        qreal itW = item->x() + item->rect().right();
+        qreal itH = item->y() + item->rect().bottom();
+
+        if (itX < x) x = itX;
+        if (itY < y) y = itY;
+        if (itW > w) w = itW;
+        if (itH > h) h = itH;
+
         if (item->rect().height() > indent) indent = item->rect().height();
     }
 
@@ -98,9 +106,11 @@ void ScreenPositionWidget::calculateSceneRect()
     h = h - y;
     minPos = {x, y};
 
-    QRectF bound(x - indent, y - indent, w + indent*2 , h + indent*2);
+    QRectF bound(x - indent/2, y - indent/2, w + indent, h + indent);
 
     setSceneRect(bound);
+    centerOn(bound.center());
+
     fitInView(bound, Qt::KeepAspectRatio);
     calculateTransits();
 }

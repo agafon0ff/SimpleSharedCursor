@@ -98,9 +98,6 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<SharedCursor::Device
     if (deviceWidgets.contains(device->uuid))
         return;
 
-    // if (!device->self)
-    // {
-
     DeviceItemWidget *widget = new DeviceItemWidget(this);
     widget->setUuid(device->uuid);
     widget->setName(device->name);
@@ -119,7 +116,6 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<SharedCursor::Device
     ui->listWidgetDevices->setItemWidget(listItem, widget);
 
     connect(widget, &DeviceItemWidget::removeClicked, this, &SettingsWidget::removeDeviceFromListWidget);
-    // }
 
     positioningWidget->addDevice(device);
 }
