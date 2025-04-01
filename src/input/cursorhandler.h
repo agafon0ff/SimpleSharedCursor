@@ -18,7 +18,8 @@ public slots:
 
     void setHoldCursorPosition(const QPoint &pos);
     void setCurrentUuid(const QUuid &uuid);
-    void setTransits(const QMap<QUuid, QVector<SharedCursor::Transit>> &transits);
+    void setDevices(const QMap<QUuid, QSharedPointer<SharedCursor::Device>> &_devices);
+
     void setConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state);
     void setRemoteCursorPos(const QPoint &pos);
     void setRemoteControlState(const QUuid &master, const QUuid &slave);
@@ -41,7 +42,7 @@ private:
     QPoint lastCursorPosition = {0, 0};
     QPoint holdCursorPosition = {0, 0};
     QVector<SharedCursor::Transit> currentTransits;
-    QMap<QUuid, QVector<SharedCursor::Transit>> transitsMap;
+    QMap<QUuid, QSharedPointer<SharedCursor::Device>> devices;
     QMap<QUuid, SharedCursor::ConnectionState> connnetionStates;
 
     void timerEvent(QTimerEvent *e);

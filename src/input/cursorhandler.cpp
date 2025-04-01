@@ -56,20 +56,21 @@ void CursorHandler::setCurrentUuid(const QUuid &uuid)
     controlledByUuid = uuid;
     connnetionStates[uuid] = SharedCursor::Connected;
 
-    auto it = transitsMap.find(uuid);
-    if (it != transitsMap.end()) {
-        currentTransits = it.value();
+    auto it = devices.find(uuid);
+    if (it != devices.end()) {
+        currentTransits = it.value()->transits;
     }
     else {
         currentTransits.clear();
     }
 }
 
-void CursorHandler::setTransits(const QMap<QUuid, QVector<SharedCursor::Transit> > &_transits)
+void CursorHandler::setDevices(const QMap<QUuid, QSharedPointer<SharedCursor::Device> > &_devices)
 {
     qDebug() << Q_FUNC_INFO;
-    transitsMap = _transits;
-    currentTransits = transitsMap.value(ownUuid);
+
+    devices = _devices;
+    currentTransits = _devices.value(ownUuid)->transits;
 }
 
 void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state)
@@ -83,7 +84,7 @@ void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::Connecti
         if (uuid == transitUuid && state != SharedCursor::Connected) {
             updateControlState(SharedCursor::SelfControl);
             transitUuid = ownUuid;
-            currentTransits = transitsMap.value(transitUuid);
+            currentTransits = devices.value(transitUuid)->transits;
             emit remoteControl(ownUuid, ownUuid);
         }
         break;
@@ -91,7 +92,7 @@ void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::Connecti
         if (uuid == controlledByUuid && state != SharedCursor::Connected) {
             updateControlState(SharedCursor::SelfControl);
             transitUuid = ownUuid;
-            currentTransits = transitsMap.value(transitUuid);
+            currentTransits = devices.value(transitUuid)->transits;
         }
         break;
     }
@@ -167,10 +168,10 @@ void CursorHandler::checkCursor(const QPoint &pos)
     }
 
     if (newTransitUuid != transitUuid) {
-        if (connnetionStates.value(newTransitUuid) == SharedCursor::Connected && transitsMap.contains(newTransitUuid)) {
+        if (connnetionStates.value(newTransitUuid) == SharedCursor::Connected && devices.contains(newTransitUuid)) {
             transitUuid = newTransitUuid;
             currentTransitState = connnetionStates.value(transitUuid);
-            currentTransits = transitsMap.value(transitUuid);
+            currentTransits = devices.value(transitUuid)->transits;
 
             const QPoint remotePos = calculateRemotePos(*transitIterator, pos);
             emit remoteControl(ownUuid, transitUuid);

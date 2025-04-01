@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     QObject::connect(&devConnectManager, &DeviceConnectManager::deviceConnectionChanged, &cursorHandler, &CursorHandler::setConnectionState);
     QObject::connect(&settingsWidget, &SettingsWidget::removeDevice, &devConnectManager, &DeviceConnectManager::handleRemoveDevice);
     QObject::connect(&settingsWidget, &SettingsWidget::keywordChanged, &devConnectManager, &DeviceConnectManager::setKeyword);
-    QObject::connect(&settingsWidget, &SettingsWidget::transitsChanged, &cursorHandler, &CursorHandler::setTransits);
+    QObject::connect(&settingsWidget, &SettingsWidget::devicesChanged, &cursorHandler, &CursorHandler::setDevices);
     QObject::connect(&inputHandler, &InputHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
     QObject::connect(&cursorHandler, &CursorHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
     QObject::connect(&cursorHandler, &CursorHandler::remoteControl, &devConnectManager, &DeviceConnectManager::sendRemoteControlMessage);
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 
     Settings.loadDevices();
     cursorHandler.setCurrentUuid(Settings.uuid());
-    cursorHandler.setTransits(Settings.transits());
+    cursorHandler.setDevices(Settings.devices());
 
     int result = a.exec();
 

@@ -164,7 +164,7 @@ void SettingsWidget::saveSettings()
         Settings.setScreenEnabled(item->uuid(), item->index(), item->isEnabled());
     }
 
-    emit transitsChanged(Settings.transits());
+    emit devicesChanged(Settings.devices());
 
     for (const QUuid &uuid: std::as_const(removeList)) {
         Settings.removeDevice(uuid);
