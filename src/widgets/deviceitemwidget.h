@@ -29,12 +29,13 @@ signals:
     void removeClicked(const QUuid &uuid);
 
 private:
+    void paintEvent(QPaintEvent *) override;
+
     QHBoxLayout horizontalLayout;
     QLabel labelStatus;
     QLabel labelName;
     QLabel labelHost;
     QPushButton btnRemove;
-
 
     QPixmap pixmapConnected, pixmapDisconnected;
     QUuid uuid;

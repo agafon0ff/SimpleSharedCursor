@@ -161,6 +161,7 @@ void SettingsWidget::saveSettings()
     for (ScreenRectItem* item: items) {
         Settings.setDevicePosition(item->uuid(), item->pos().toPoint());
         Settings.addTransitsToDevice(item->uuid(), item->transits());
+        Settings.setScreenEnabled(item->uuid(), item->index(), item->isEnabled());
     }
 
     emit transitsChanged(Settings.transits());

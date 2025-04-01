@@ -42,31 +42,34 @@ inline QPoint jsonValueToPoint(const QJsonValue &jValue)
     return QPoint(obj.value("x").toInt(), obj.value("y").toInt());
 }
 
-inline QJsonValue rectListToJsonValue(const QVector<QRect> &rectList)
+inline QJsonValue screenListToJsonValue(const QVector<SharedCursor::Screen> &rectList)
 {
     QJsonArray result;
-    for (const QRect &rect: rectList) {
+    for (const SharedCursor::Screen &screen: rectList) {
         QJsonObject rectObj;
-        rectObj.insert("x", rect.x());
-        rectObj.insert("y", rect.y());
-        rectObj.insert("width", rect.width());
-        rectObj.insert("height", rect.height());
+        rectObj.insert("x", screen.rect.x());
+        rectObj.insert("y", screen.rect.y());
+        rectObj.insert("width", screen.rect.width());
+        rectObj.insert("height", screen.rect.height());
+        rectObj.insert("enable", screen.enabled);
         result.append(rectObj);
     }
     return result;
 }
 
-inline QVector<QRect> jsonValueToRectList(const QJsonValue &jValue)
+inline QVector<SharedCursor::Screen> jsonValueToScreensList(const QJsonValue &jValue)
 {
-    QVector<QRect> result;
-    QJsonArray arr = jValue.toArray();
+    QVector<SharedCursor::Screen> result;
+    const QJsonArray arr = jValue.toArray();
     for (const QJsonValue &value: arr) {
         const QJsonObject &obj = value.toObject();
-        QRect rect(obj.value("x").toInt(),
-                   obj.value("y").toInt(),
-                   obj.value("width").toInt(),
-                   obj.value("height").toInt());
-        result.append(rect);
+        SharedCursor::Screen screen;
+        screen.rect = QRect(obj.value("x").toInt(),
+                            obj.value("y").toInt(),
+                            obj.value("width").toInt(),
+                            obj.value("height").toInt());
+        screen.enabled = obj.value("enable").toBool(true);
+        result.append(screen);
     }
 
     return result;
@@ -92,7 +95,7 @@ inline QJsonValue transitListToJsonValue(const QVector<SharedCursor::Transit> &l
 inline QVector<SharedCursor::Transit> jsonValueToTransitList(const QJsonValue &jValue)
 {
     QVector<SharedCursor::Transit> result;
-    QJsonArray arr = jValue.toArray();
+    const QJsonArray arr = jValue.toArray();
     for (const QJsonValue &value: arr) {
         const QJsonObject &obj = value.toObject();
 
@@ -117,7 +120,7 @@ inline void fillDeviceJsonMessage(QJsonObject &jsonOut, const char* type)
     jsonOut.insert(SharedCursor::KEY_TYPE, type);
     jsonOut.insert(SharedCursor::KEY_NAME, Settings.name());
     jsonOut.insert(SharedCursor::KEY_UUID, Settings.uuid().toString());
-    jsonOut.insert(SharedCursor::KEY_SCREENS, rectListToJsonValue(Settings.screens()));
+    jsonOut.insert(SharedCursor::KEY_SCREENS, screenListToJsonValue(Settings.screens()));
 }
 
 };

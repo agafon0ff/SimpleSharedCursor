@@ -17,7 +17,7 @@ public:
     QString keyword() const;
     quint16 portTcp() const;
     quint16 portUdp() const;
-    QVector<QRect> screens();
+    QVector<SharedCursor::Screen> screens();
     QRect screenRect();
     QSharedPointer<SharedCursor::Device> device(const QUuid &uuid) const;
     QMap<QUuid, QSharedPointer<SharedCursor::Device>> devices() const;
@@ -42,6 +42,8 @@ public slots:
     void clearTransits();
     void setTransitsToDevice(const QUuid &uuid, const QVector<SharedCursor::Transit> &transits);
     void addTransitsToDevice(const QUuid &uuid, const QVector<SharedCursor::Transit> &transits);
+
+    void setScreenEnabled(const QUuid &uuid, int index, bool enabled);
 
     void setDevice(const QJsonObject &obj);
     void removeDevice(const QUuid &uuid);

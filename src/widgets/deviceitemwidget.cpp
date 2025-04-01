@@ -1,5 +1,7 @@
 #include "deviceitemwidget.h"
 
+#include <QPainter>
+
 DeviceItemWidget::DeviceItemWidget(QWidget *parent) :
     QWidget(parent),
     pixmapConnected{"://img/connected.png"},
@@ -91,4 +93,11 @@ void DeviceItemWidget::setSelfState(bool self)
 
     if (self)
         labelStatus.setPixmap(pixmapConnected);
+}
+
+void DeviceItemWidget::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    p.setPen(QPen(QBrush(QColor(40, 40, 40)), 1));
+    p.drawLine(0, height()-1, width()-1, height()-1);
 }

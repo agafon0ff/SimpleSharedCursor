@@ -224,7 +224,7 @@ QJsonObject DeviceConnectManager::devicePtrToJsonObject(QSharedPointer<SharedCur
     result.insert(SharedCursor::KEY_NAME, device->name);
     result.insert(SharedCursor::KEY_HOST, QHostAddress(device->host.toIPv4Address()).toString());
     result.insert(SharedCursor::KEY_SELF, device->self);
-    result.insert(SharedCursor::KEY_SCREENS, SharedCursor::rectListToJsonValue(device->screens));
+    result.insert(SharedCursor::KEY_SCREENS, SharedCursor::screenListToJsonValue(device->screens));
     return result;
 }
 
@@ -235,7 +235,7 @@ QSharedPointer<SharedCursor::Device> DeviceConnectManager::jsonObjectToDevicePtr
     device->name = obj.value(SharedCursor::KEY_NAME).toString();
     device->host = QHostAddress(obj.value(SharedCursor::KEY_HOST).toString());
     device->self = device->uuid == _uuid;
-    device->screens = SharedCursor::jsonValueToRectList(obj.value(SharedCursor::KEY_SCREENS));
+    device->screens = SharedCursor::jsonValueToScreensList(obj.value(SharedCursor::KEY_SCREENS));
     return device;
 }
 

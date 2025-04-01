@@ -26,10 +26,12 @@ QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
 
 void ScreenPositionWidget::addDevice(QSharedPointer<SharedCursor::Device> device)
 {
-    for (const QRect &rect: std::as_const(device->screens)) {
-        ScreenRectItem *item = createRect(rect, device->position);
+    for (const SharedCursor::Screen &screen: std::as_const(device->screens)) {
+        ScreenRectItem *item = createScreen(screen, device->position);
         item->setText(device->name);
         item->setUuid(device->uuid);
+        item->setIndex(items.size());
+        items.append(item);
     }
     calculateSceneRect();
 }
@@ -40,6 +42,8 @@ void ScreenPositionWidget::removeDevice(const QUuid &uuid)
         if (item->uuid() == uuid) {
             disconnect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
             disconnect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
+            disconnect(item, &ScreenRectItem::selected, this, &ScreenPositionWidget::onItemSelected);
+            disconnect(item, &ScreenRectItem::enabled, this, &ScreenPositionWidget::calculateTransits);
             items.removeOne(item);
             item->deleteLater();
         }
@@ -62,6 +66,15 @@ void ScreenPositionWidget::normalize()
          item->setPos(item->pos() - minPos);
      }
      calculateTransits();
+}
+
+void ScreenPositionWidget::onItemSelected(ScreenRectItem *item, bool state)
+{
+    if (!state)
+        return;
+
+    for (ScreenRectItem *_item: std::as_const(items))
+        _item->setZValue(item->uuid() == _item->uuid());
 }
 
 void ScreenPositionWidget::onItemPositionChanged(ScreenRectItem *_item, const QPointF &dpos)
@@ -125,23 +138,25 @@ void ScreenPositionWidget::calculateTransits()
         for (ScreenRectItem *to: std::as_const(items)) {
             if (from == to) continue;
             if (from->uuid() == to->uuid()) continue;
+            if (!from->isEnabled() || !to->isEnabled()) continue;
             calculateTransitsTopBottom(from, to);
             calculateTransitsLeftRight(from, to);
         }
     }
 }
 
-ScreenRectItem *ScreenPositionWidget::createRect(const QRect &rect, const QPoint &pos)
+ScreenRectItem *ScreenPositionWidget::createScreen(const SharedCursor::Screen &screen, const QPoint &pos)
 {
     ScreenRectItem *item = new ScreenRectItem();
     scene()->addItem(item);
-    item->setRect(rect);
+    item->setRect(screen.rect);
+    item->setEnabled(screen.enabled);
     item->setPos(pos);
 
     connect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
+    connect(item, &ScreenRectItem::selected, this, &ScreenPositionWidget::onItemSelected);
     connect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
-
-    items.append(item);
+    connect(item, &ScreenRectItem::enabled, this, &ScreenPositionWidget::calculateTransits);
 
     return item;
 }

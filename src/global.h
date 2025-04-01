@@ -93,6 +93,12 @@ namespace SharedCursor
         QUuid uuid;
     };
 
+    struct Screen
+    {
+        bool enabled = true;
+        QRect rect;
+    };
+
     struct Device
     {
         QUuid uuid;
@@ -100,7 +106,7 @@ namespace SharedCursor
         QHostAddress host;
         bool self = false;
         QPoint position;
-        QVector<QRect> screens;
+        QVector<Screen> screens;
         QVector<Transit> transits;
 
         ConnectionState state = Disconnected;
