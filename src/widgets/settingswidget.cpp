@@ -93,26 +93,29 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<SharedCursor::Device
     if (device.isNull())
         return;
 
-    qDebug() << Q_FUNC_INFO << device->uuid << device->name;
+    qDebug() << Q_FUNC_INFO << device->uuid << device->name << device->self;
 
-    if (!device->self && !deviceWidgets.contains(device->uuid)) {
-        DeviceItemWidget *widget = new DeviceItemWidget(this);
-        widget->setUuid(device->uuid);
-        widget->setName(device->name);
-        widget->setHost(device->host);
-        widget->setState(device->state);
+    if (deviceWidgets.contains(device->uuid))
+        return;
 
-        deviceWidgets.insert(device->uuid, widget);
+    DeviceItemWidget *widget = new DeviceItemWidget(this);
+    widget->setUuid(device->uuid);
+    widget->setName(device->name);
+    widget->setHost(device->host);
+    widget->setState(device->state);
+    widget->setSelfState(device->self);
 
-        QListWidgetItem *listItem = new QListWidgetItem(ui->listWidgetDevices);
-        listItem->setSizeHint(widget->sizeHint());
+    deviceWidgets.insert(device->uuid, widget);
 
-        listIitemWidgets.insert(device->uuid, listItem);
-        ui->listWidgetDevices->addItem(listItem);
-        ui->listWidgetDevices->setItemWidget(listItem, widget);
+    QListWidgetItem *listItem = new QListWidgetItem;
+    listItem->setSizeHint(widget->sizeHint());
 
-        connect(widget, &DeviceItemWidget::removeClicked, this, &SettingsWidget::removeDeviceFromListWidget);
-    }
+    listIitemWidgets.insert(device->uuid, listItem);
+
+    ui->listWidgetDevices->insertItem((device->self ? 0 : ui->listWidgetDevices->count()), listItem);
+    ui->listWidgetDevices->setItemWidget(listItem, widget);
+
+    connect(widget, &DeviceItemWidget::removeClicked, this, &SettingsWidget::removeDeviceFromListWidget);
 
     positioningWidget->addDevice(device);
 }
@@ -137,6 +140,38 @@ void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
 
     positioningWidget->removeDevice(uuid);
     removeList.append(uuid);
+    Settings.removeDevice(uuid);
+}
+
+void SettingsWidget::saveSettings()
+{
+    if (Settings.name() != ui->lineDeviceName->text()) {
+        Settings.setName(ui->lineDeviceName->text());
+        emit nameChanged(Settings.name());
+    }
+
+    if (Settings.keyword() != ui->lineEditKeyword->text()) {
+        Settings.setKeyword(ui->lineEditKeyword->text());
+        emit keywordChanged(Settings.keyword());
+    }
+
+    Settings.clearTransits();
+    positioningWidget->normalize();
+    const QVector<ScreenRectItem*> &items = positioningWidget->screenRectItems();
+    for (ScreenRectItem* item: items) {
+        Settings.setDevicePosition(item->uuid(), item->pos().toPoint());
+        Settings.addTransitsToDevice(item->uuid(), item->transits());
+        Settings.setScreenEnabled(item->uuid(), item->index(), item->isEnabled());
+    }
+
+    emit transitsChanged(Settings.transits());
+
+    for (const QUuid &uuid: std::as_const(removeList)) {
+        Settings.removeDevice(uuid);
+        emit removeDevice(uuid);
+    }
+
+    Settings.save();
 }
 
 void SettingsWidget::onBtnFindDevicesClicked()
@@ -150,33 +185,7 @@ void SettingsWidget::onBtnFindDevicesClicked()
 
 void SettingsWidget::onBtnOkClicked()
 {
-    if (Settings.name() != ui->lineDeviceName->text()) {
-        Settings.setName(ui->lineDeviceName->text());
-        emit nameChanged(Settings.name());
-    }
-
-    if (Settings.keyword() != ui->lineEditKeyword->text()) {
-        Settings.setKeyword(ui->lineEditKeyword->text());
-        emit nameChanged(Settings.keyword());
-    }
-
-    Settings.clearTransits();
-    positioningWidget->normalize();
-    const QVector<ScreenRectItem*> &items = positioningWidget->screenRectItems();
-    for (ScreenRectItem* item: items) {
-        Settings.setDevicePosition(item->uuid(), item->pos().toPoint());
-        Settings.addTransitsToDevice(item->uuid(), item->transits());
-    }
-
-    emit transitsChanged(Settings.transits());
-
-    for (const QUuid &uuid: std::as_const(removeList)) {
-        Settings.removeDevice(uuid);
-        emit removeDevice(uuid);
-    }
-
-    Settings.save();
-
+    saveSettings();
     clearWidget();
     hide();
 }
@@ -185,6 +194,11 @@ void SettingsWidget::onBtnCancelClicked()
 {
     hide();
     clearWidget();
+}
+
+void SettingsWidget::onBtnApplyClicked()
+{
+    saveSettings();
 }
 
 void SettingsWidget::showEvent(QShowEvent *)

@@ -26,10 +26,12 @@ QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
 
 void ScreenPositionWidget::addDevice(QSharedPointer<SharedCursor::Device> device)
 {
-    for (const QRect &rect: std::as_const(device->screens)) {
-        ScreenRectItem *item = createRect(rect, device->position);
+    for (const SharedCursor::Screen &screen: std::as_const(device->screens)) {
+        ScreenRectItem *item = createScreen(screen, device->position);
         item->setText(device->name);
         item->setUuid(device->uuid);
+        item->setIndex(items.size());
+        items.append(item);
     }
     calculateSceneRect();
 }
@@ -40,9 +42,10 @@ void ScreenPositionWidget::removeDevice(const QUuid &uuid)
         if (item->uuid() == uuid) {
             disconnect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
             disconnect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
+            disconnect(item, &ScreenRectItem::selected, this, &ScreenPositionWidget::onItemSelected);
+            disconnect(item, &ScreenRectItem::enabled, this, &ScreenPositionWidget::calculateTransits);
             items.removeOne(item);
             item->deleteLater();
-            break;
         }
     }
     calculateSceneRect();
@@ -65,6 +68,15 @@ void ScreenPositionWidget::normalize()
      calculateTransits();
 }
 
+void ScreenPositionWidget::onItemSelected(ScreenRectItem *item, bool state)
+{
+    if (!state)
+        return;
+
+    for (ScreenRectItem *_item: std::as_const(items))
+        _item->setZValue(item->uuid() == _item->uuid());
+}
+
 void ScreenPositionWidget::onItemPositionChanged(ScreenRectItem *_item, const QPointF &dpos)
 {
     for (ScreenRectItem *item: std::as_const(items)) {
@@ -81,17 +93,25 @@ void ScreenPositionWidget::calculateSceneRect()
         return;
 
     ScreenRectItem *item = items.at(0);
-    qreal x = item->x(), y = item->y();
+    qreal x = item->x() + item->rect().x();
+    qreal y = item->y() + item->rect().y();
     qreal w = item->x() + item->rect().right();
     qreal h = item->y() + item->rect().bottom();
     qreal indent = item->rect().height();
 
     for (int i=1; i<items.size(); ++i) {
         item = items.at(i);
-        if (item->x() < x) x = item->x();
-        if (item->y() < y) y = item->y();
-        if (item->rect().right() + item->x() > w) w = item->rect().right() + item->x();
-        if (item->rect().bottom() + item->y() > h) h = item->rect().bottom() + item->y();
+
+        qreal itX = item->x() + item->rect().x();
+        qreal itY = item->y() + item->rect().y();
+        qreal itW = item->x() + item->rect().right();
+        qreal itH = item->y() + item->rect().bottom();
+
+        if (itX < x) x = itX;
+        if (itY < y) y = itY;
+        if (itW > w) w = itW;
+        if (itH > h) h = itH;
+
         if (item->rect().height() > indent) indent = item->rect().height();
     }
 
@@ -99,9 +119,11 @@ void ScreenPositionWidget::calculateSceneRect()
     h = h - y;
     minPos = {x, y};
 
-    QRectF bound(x - indent, y - indent, w + indent*2 , h + indent*2);
+    QRectF bound(x - indent/2, y - indent/2, w + indent, h + indent);
 
     setSceneRect(bound);
+    centerOn(bound.center());
+
     fitInView(bound, Qt::KeepAspectRatio);
     calculateTransits();
 }
@@ -116,23 +138,25 @@ void ScreenPositionWidget::calculateTransits()
         for (ScreenRectItem *to: std::as_const(items)) {
             if (from == to) continue;
             if (from->uuid() == to->uuid()) continue;
+            if (!from->isEnabled() || !to->isEnabled()) continue;
             calculateTransitsTopBottom(from, to);
             calculateTransitsLeftRight(from, to);
         }
     }
 }
 
-ScreenRectItem *ScreenPositionWidget::createRect(const QRect &rect, const QPoint &pos)
+ScreenRectItem *ScreenPositionWidget::createScreen(const SharedCursor::Screen &screen, const QPoint &pos)
 {
     ScreenRectItem *item = new ScreenRectItem();
     scene()->addItem(item);
-    item->setRect(rect);
+    item->setRect(screen.rect);
+    item->setEnabled(screen.enabled);
     item->setPos(pos);
 
     connect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
+    connect(item, &ScreenRectItem::selected, this, &ScreenPositionWidget::onItemSelected);
     connect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
-
-    items.append(item);
+    connect(item, &ScreenRectItem::enabled, this, &ScreenPositionWidget::calculateTransits);
 
     return item;
 }

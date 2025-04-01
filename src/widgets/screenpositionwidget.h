@@ -24,6 +24,7 @@ public slots:
     void normalize();
 
 private slots:
+    void onItemSelected(ScreenRectItem *item, bool state);
     void onItemPositionChanged(ScreenRectItem *item, const QPointF &dpos);
     void calculateSceneRect();
     void calculateTransits();
@@ -33,7 +34,7 @@ private:
     QGraphicsScene graphicsScene;
     QPointF minPos{0., 0.};
 
-    ScreenRectItem *createRect(const QRect &rect, const QPoint &pos);
+    ScreenRectItem *createScreen(const SharedCursor::Screen &screen, const QPoint &pos);
     void calculateTransitsTopBottom(ScreenRectItem *itemFrom, ScreenRectItem *itemTo);
     void calculateTransitsLeftRight(ScreenRectItem *itemFrom, ScreenRectItem *itemTo);
 

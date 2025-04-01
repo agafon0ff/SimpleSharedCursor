@@ -1,5 +1,9 @@
 #include <QPainter>
+#include <QStyle>
+#include <QStyleOption>
 #include <QDebug>
+#include <QMenu>
+
 #include <qmath.h>
 
 #include "screenrectitem.h"
@@ -30,6 +34,26 @@ void ScreenRectItem::setText(const QString &text)
 {
     _text = text;
     update();
+}
+
+int ScreenRectItem::index()
+{
+    return _index;
+}
+
+void ScreenRectItem::setIndex(int index)
+{
+    _index = index;
+}
+
+bool ScreenRectItem::isEnabled()
+{
+    return _enabled;
+}
+
+void ScreenRectItem::setEnabled(bool state)
+{
+    _enabled = state;
 }
 
 void ScreenRectItem::addTransit(SharedCursor::Transit transit)
@@ -66,17 +90,13 @@ QRectF ScreenRectItem::adjusted()
 
 void ScreenRectItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    _isSelected = true;
-    emit selected(true);
-    emit pressed();
+    emit pressed(this);
     QGraphicsRectItem::mousePressEvent(event);
 }
 
 void ScreenRectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    _isSelected = false;
-    emit selected(false);
-    emit released();
+    emit released(this);
     QGraphicsRectItem::mouseReleaseEvent(event);
 }
 
@@ -86,9 +106,13 @@ void ScreenRectItem::paint(QPainter *p, const QStyleOptionGraphicsItem *item, QW
     Q_UNUSED(item);
     Q_UNUSED(p);
 
+    bool isSelected = item->state & QStyle::State_Selected;
+    int opacity = _enabled ? 255 : 30;
+
     qreal penWidth = 2 / p->transform().m11();
-    p->setPen(QPen(QBrush(QColor(0, 0, 0)), penWidth));
-    p->setBrush(QBrush(QColor(160, 160, 160)));
+    p->setPen(QPen(QBrush(QColor(0, 0, 0, opacity)), penWidth));
+    p->setBrush(QBrush(QColor(160, 160, 160, opacity)));
+
     p->drawRect(rect());
 
     _font = p->font();
@@ -105,14 +129,34 @@ void ScreenRectItem::paint(QPainter *p, const QStyleOptionGraphicsItem *item, QW
     for (const auto &transit: std::as_const(_transits)) {
         p->drawLine(transit.line);
     }
+
+    if (_selected != isSelected) {
+        _selected = isSelected;
+        emit selected(this, _selected);
+    }
 }
 
 QVariant ScreenRectItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if (change == ItemPositionChange && _isSelected) {
+    if (change == ItemPositionChange && _selected) {
         emit positionChanged(this, value.toPointF() - pos());
     }
 
     return QGraphicsItem::itemChange(change, value);
+}
+
+void ScreenRectItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+    Q_UNUSED(event);
+    QMenu menu;
+    QString text = _enabled ? "disable" : "enable";
+
+    menu.addAction(text, this, [this](){
+        _enabled = !_enabled;
+        update();
+        emit enabled(this, _enabled);
+    });
+
+    menu.exec(QCursor::pos());
 }
 
