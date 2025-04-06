@@ -34,7 +34,7 @@ signals:
     void keywordChanged(const QString &key);
     void removeDevice(const QUuid &uuid);
     void screenPositionChanged(const QUuid &uuid, const QPoint &pos);
-    void transitsChanged(const QMap<QUuid, QVector<SharedCursor::Transit>> &transits);
+    void devicesChanged(const QMap<QUuid, QSharedPointer<SharedCursor::Device>> &devices);
 
 private:
     Ui::SettingsWidget *ui;
