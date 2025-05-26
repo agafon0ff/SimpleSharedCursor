@@ -11,8 +11,8 @@ ScreenPositionWidget::ScreenPositionWidget(QWidget *parent)
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setCacheMode(QGraphicsView::CacheBackground);
 
-    graphicsScene.setSceneRect(graphicsScene.itemsBoundingRect());
-    setScene(&graphicsScene);
+    _graphicsScene.setSceneRect(_graphicsScene.itemsBoundingRect());
+    setScene(&_graphicsScene);
 }
 
 ScreenPositionWidget::~ScreenPositionWidget()
@@ -21,7 +21,7 @@ ScreenPositionWidget::~ScreenPositionWidget()
 
 QVector<ScreenRectItem *> ScreenPositionWidget::screenRectItems() const
 {
-    return items;
+    return _items;
 }
 
 void ScreenPositionWidget::addDevice(QSharedPointer<SharedCursor::Device> device)
@@ -30,21 +30,21 @@ void ScreenPositionWidget::addDevice(QSharedPointer<SharedCursor::Device> device
         ScreenRectItem *item = createScreen(screen, device->position);
         item->setText(device->name);
         item->setUuid(device->uuid);
-        item->setIndex(items.size());
-        items.append(item);
+        item->setIndex(_items.size());
+        _items.append(item);
     }
     calculateSceneRect();
 }
 
 void ScreenPositionWidget::removeDevice(const QUuid &uuid)
 {
-    for (ScreenRectItem *item: std::as_const(items)) {
+    for (ScreenRectItem *item: std::as_const(_items)) {
         if (item->uuid() == uuid) {
             disconnect(item, &ScreenRectItem::positionChanged, this, &ScreenPositionWidget::onItemPositionChanged);
             disconnect(item, &ScreenRectItem::released, this, &ScreenPositionWidget::calculateSceneRect);
             disconnect(item, &ScreenRectItem::selected, this, &ScreenPositionWidget::onItemSelected);
             disconnect(item, &ScreenRectItem::enabled, this, &ScreenPositionWidget::calculateTransits);
-            items.removeOne(item);
+            _items.removeOne(item);
             item->deleteLater();
         }
     }
@@ -53,17 +53,17 @@ void ScreenPositionWidget::removeDevice(const QUuid &uuid)
 
 void ScreenPositionWidget::clearWidget()
 {
-    for (ScreenRectItem *item: std::as_const(items)) {
+    for (ScreenRectItem *item: std::as_const(_items)) {
         item->disconnect();
         item->deleteLater();
     }
-    items.clear();
+    _items.clear();
 }
 
 void ScreenPositionWidget::normalize()
 {
-     for (ScreenRectItem *item: std::as_const(items)) {
-         item->setPos(item->pos() - minPos);
+     for (ScreenRectItem *item: std::as_const(_items)) {
+         item->setPos(item->pos() - _minPos);
      }
      calculateTransits();
 }
@@ -73,13 +73,13 @@ void ScreenPositionWidget::onItemSelected(ScreenRectItem *item, bool state)
     if (!state)
         return;
 
-    for (ScreenRectItem *_item: std::as_const(items))
+    for (ScreenRectItem *_item: std::as_const(_items))
         _item->setZValue(item->uuid() == _item->uuid());
 }
 
 void ScreenPositionWidget::onItemPositionChanged(ScreenRectItem *_item, const QPointF &dpos)
 {
-    for (ScreenRectItem *item: std::as_const(items)) {
+    for (ScreenRectItem *item: std::as_const(_items)) {
         if (_item == item) continue;
         if (item->uuid() == _item->uuid()) {
             item->setPos(item->pos() + dpos);
@@ -89,18 +89,18 @@ void ScreenPositionWidget::onItemPositionChanged(ScreenRectItem *_item, const QP
 
 void ScreenPositionWidget::calculateSceneRect()
 {
-    if (items.isEmpty())
+    if (_items.isEmpty())
         return;
 
-    ScreenRectItem *item = items.at(0);
+    ScreenRectItem *item = _items.at(0);
     qreal x = item->x() + item->rect().x();
     qreal y = item->y() + item->rect().y();
     qreal w = item->x() + item->rect().right();
     qreal h = item->y() + item->rect().bottom();
     qreal indent = item->rect().height();
 
-    for (int i=1; i<items.size(); ++i) {
-        item = items.at(i);
+    for (int i=1; i<_items.size(); ++i) {
+        item = _items.at(i);
 
         qreal itX = item->x() + item->rect().x();
         qreal itY = item->y() + item->rect().y();
@@ -117,7 +117,7 @@ void ScreenPositionWidget::calculateSceneRect()
 
     w = w - x;
     h = h - y;
-    minPos = {x, y};
+    _minPos = {x, y};
 
     QRectF bound(x - indent/2, y - indent/2, w + indent, h + indent);
 
@@ -130,12 +130,12 @@ void ScreenPositionWidget::calculateSceneRect()
 
 void ScreenPositionWidget::calculateTransits()
 {
-    for (ScreenRectItem *item: std::as_const(items)) {
+    for (ScreenRectItem *item: std::as_const(_items)) {
         item->clearTransits();
     }
 
-    for (ScreenRectItem *from: std::as_const(items)) {
-        for (ScreenRectItem *to: std::as_const(items)) {
+    for (ScreenRectItem *from: std::as_const(_items)) {
+        for (ScreenRectItem *to: std::as_const(_items)) {
             if (from == to) continue;
             if (from->uuid() == to->uuid()) continue;
             if (!from->isEnabled() || !to->isEnabled()) continue;

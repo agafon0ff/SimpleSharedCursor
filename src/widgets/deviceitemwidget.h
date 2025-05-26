@@ -31,14 +31,14 @@ signals:
 private:
     void paintEvent(QPaintEvent *) override;
 
-    QHBoxLayout horizontalLayout;
-    QLabel labelStatus;
-    QLabel labelName;
-    QLabel labelHost;
-    QPushButton btnRemove;
+    QHBoxLayout _horizontalLayout;
+    QLabel _labelStatus;
+    QLabel _labelName;
+    QLabel _labelHost;
+    QPushButton _btnRemove;
 
-    QPixmap pixmapConnected, pixmapDisconnected;
-    QUuid uuid;
-    SharedCursor::ConnectionState state = SharedCursor::Unknown;
-    bool selfState = false;
+    QPixmap _pixmapConnected, _pixmapDisconnected;
+    QUuid _uuid;
+    SharedCursor::ConnectionState _state = SharedCursor::Unknown;
+    bool _selfState = false;
 };

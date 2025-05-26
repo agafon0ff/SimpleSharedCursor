@@ -21,12 +21,12 @@ public slots:
     void setWheelEvent(int delta);
 
 private:
-    QMap<int, unsigned long> keymap;
-    SharedCursor::ControlState controlState = SharedCursor::SelfControl;
+    QMap<int, unsigned long> _keymap;
+    SharedCursor::ControlState _controlState = SharedCursor::SelfControl;
 
-    bool releaseProcess = false;
-    QVector<int> pressedKeys;
-    QVector<int> pressedMouse;
+    bool _releaseProcess = false;
+    QVector<int> _pressedKeys;
+    QVector<int> _pressedMouse;
 
     void releasePressedKeys();
     void createKeymap();

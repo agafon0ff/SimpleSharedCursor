@@ -29,27 +29,27 @@ TcpSocket::~TcpSocket()
 void TcpSocket::setType(Type _type)
 {
     qDebug() << Q_FUNC_INFO << _type;
-    type = _type;
+    _type = _type;
 }
 
 TcpSocket::Type TcpSocket::getType() const
 {
-    return type;
+    return _type;
 }
 
 bool TcpSocket::isUuidEqual(const QUuid &_uuid) const
 {
-    return uuid == _uuid;
+    return _uuid == _uuid;
 }
 
 QUuid TcpSocket::getUuid() const
 {
-    return uuid;
+    return _uuid;
 }
 
 void TcpSocket::setKeyword(const QString &keyword)
 {
-    sslWraper.setKey(keyword.toLocal8Bit());
+    _sslWraper.setKey(keyword.toLocal8Bit());
 }
 
 bool TcpSocket::isConnected() const
@@ -57,27 +57,27 @@ bool TcpSocket::isConnected() const
     return _isConnected;
 }
 
-void TcpSocket::setUuid(const QUuid &_uuid)
+void TcpSocket::setUuid(const QUuid &uuid)
 {
-    uuid = _uuid;
+    _uuid = uuid;
 }
 
-void TcpSocket::setHost(const QHostAddress &_host)
+void TcpSocket::setHost(const QHostAddress &host)
 {
-    host = _host;
+    _host = host;
 }
 
-void TcpSocket::setPort(quint16 _port)
+void TcpSocket::setPort(quint16 port)
 {
-    qDebug() << Q_FUNC_INFO << _port;
-    port = _port;
+    qDebug() << Q_FUNC_INFO << port;
+    _port = port;
 }
 
 void TcpSocket::start()
 {
     if (state() != QTcpSocket::UnconnectedState) stop();
 
-    connectToHost(host, port);
+    connectToHost(_host, _port);
 }
 
 void TcpSocket::stop()
@@ -95,30 +95,30 @@ void TcpSocket::stop()
 void TcpSocket::sendMessage(const QJsonObject &json)
 {
     if (state() == QTcpSocket::ConnectedState) {
-        SharedCursor::convertJsonToArray(json, dataOut);
-        sslWraper.encrypt(dataOut.constData(), dataOut.size(), dataOutEnc);
+        SharedCursor::convertJsonToArray(json, _dataOut);
+        _sslWraper.encrypt(_dataOut.constData(), _dataOut.size(), _dataOutEnc);
         appendDataSizeToOutBuffer();
-        write(dataOutEnc);
+        write(_dataOutEnc);
     }
 }
 
 void TcpSocket::appendDataSizeToOutBuffer()
 {
-    int size = dataOutEnc.size();
-    dataOutEnc.resize(size + sizeofInt32);
-    qToBigEndian(size, dataOutEnc.data() + size);
+    int size = _dataOutEnc.size();
+    _dataOutEnc.resize(size + sizeofInt32);
+    qToBigEndian(size, _dataOutEnc.data() + size);
 }
 
 void TcpSocket::extractDataSizesFromInputData()
 {
-    dataSizes.clear();
-    int size = dataIn.size();
+    _dataSizes.clear();
+    int size = _dataIn.size();
 
-    for(int i=0; i<dataIn.size(); ++i) {
+    for(int i=0; i<_dataIn.size(); ++i) {
         if (size > sizeofInt32) {
-            int length = qFromBigEndian<quint32>(dataIn.data() + (size - sizeofInt32));
+            int length = qFromBigEndian<quint32>(_dataIn.data() + (size - sizeofInt32));
             if (length + sizeofInt32 <= size) {
-                dataSizes.push(length);
+                _dataSizes.push(length);
                 size -= length + sizeofInt32;
             }
             else {
@@ -130,29 +130,29 @@ void TcpSocket::extractDataSizesFromInputData()
 
 void TcpSocket::parseInputData(const QByteArray &data)
 {
-    if (!SharedCursor::convertArrayToJson(data, jsonIn)) {
-        qDebug() << Q_FUNC_INFO << "ERROR: Json parsing!" << dataInDec;
+    if (!SharedCursor::convertArrayToJson(data, _jsonIn)) {
+        qDebug() << Q_FUNC_INFO << "ERROR: Json parsing!" << _dataInDec;
         return;
     }
 
     if (_isConnected) {
-        emit message(uuid, jsonIn);
+        emit message(_uuid, _jsonIn);
     }
     else {
-        if (!jsonIn.contains(SharedCursor::KEY_UUID)) {
+        if (!_jsonIn.contains(SharedCursor::KEY_UUID)) {
             return;
         }
 
-        jsonIn.insert(SharedCursor::KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
-        messageType = jsonIn.value(SharedCursor::KEY_TYPE).toString();
+        _jsonIn.insert(SharedCursor::KEY_HOST, QHostAddress(peerAddress().toIPv4Address()).toString());
+        _messageType = _jsonIn.value(SharedCursor::KEY_TYPE).toString();
 
-        if (messageType == SharedCursor::KEY_CONNECT_REQUEST) {
+        if (_messageType == SharedCursor::KEY_CONNECT_REQUEST) {
             onConnectRequestReceived();
         }
-        else if (messageType == SharedCursor::KEY_CONNECT_RESPONSE) {
+        else if (_messageType == SharedCursor::KEY_CONNECT_RESPONSE) {
             if (!_isConnected) {
                 _isConnected = true;
-                emit deviceConnected(this, jsonIn);
+                emit deviceConnected(this, _jsonIn);
             }
         }
     }
@@ -160,23 +160,23 @@ void TcpSocket::parseInputData(const QByteArray &data)
 
 void TcpSocket::onReadyRead()
 {
-    dataIn.resize(bytesAvailable());
-    read(dataIn.data(), dataIn.size());
+    _dataIn.resize(bytesAvailable());
+    read(_dataIn.data(), _dataIn.size());
     extractDataSizesFromInputData();
 
     int step = 0;
-    while (!dataSizes.isEmpty()) {
-        int size = dataSizes.pop();
-        sslWraper.decrypt(dataIn.data() + step, size, dataInDec);
-        parseInputData(dataInDec);
+    while (!_dataSizes.isEmpty()) {
+        int size = _dataSizes.pop();
+        _sslWraper.decrypt(_dataIn.data() + step, size, _dataInDec);
+        parseInputData(_dataInDec);
         step += size + sizeofInt32;
     }
 }
 
 void TcpSocket::onConnected()
 {
-    SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_CONNECT_REQUEST);
-    sendMessage(jsonOut);
+    SharedCursor::fillDeviceJsonMessage(_jsonOut, SharedCursor::KEY_CONNECT_REQUEST);
+    sendMessage(_jsonOut);
 }
 
 void TcpSocket::onDisconnected()
@@ -189,14 +189,14 @@ void TcpSocket::onDisconnected()
 
 void TcpSocket::onConnectRequestReceived()
 {
-    if (uuid.isNull())
-        uuid = QUuid::fromString(jsonIn.value(SharedCursor::KEY_UUID).toString());
+    if (_uuid.isNull())
+        _uuid = QUuid::fromString(_jsonIn.value(SharedCursor::KEY_UUID).toString());
     
     if (!_isConnected) {
         _isConnected = true;
-        emit deviceConnected(this, jsonIn);
+        emit deviceConnected(this, _jsonIn);
     }
 
-    SharedCursor::fillDeviceJsonMessage(jsonOut, SharedCursor::KEY_CONNECT_RESPONSE);
-    sendMessage(jsonOut);
+    SharedCursor::fillDeviceJsonMessage(_jsonOut, SharedCursor::KEY_CONNECT_RESPONSE);
+    sendMessage(_jsonOut);
 }

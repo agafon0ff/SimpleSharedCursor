@@ -30,9 +30,9 @@ private slots:
     void calculateTransits();
 
 private:
-    QVector<ScreenRectItem*> items;
-    QGraphicsScene graphicsScene;
-    QPointF minPos{0., 0.};
+    QVector<ScreenRectItem*> _items;
+    QGraphicsScene _graphicsScene;
+    QPointF _minPos{0., 0.};
 
     ScreenRectItem *createScreen(const SharedCursor::Screen &screen, const QPoint &pos);
     void calculateTransitsTopBottom(ScreenRectItem *itemFrom, ScreenRectItem *itemTo);

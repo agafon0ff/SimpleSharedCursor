@@ -20,12 +20,12 @@ public slots:
     void setRemoteControlState(const QUuid &master, const QUuid &slave);
 
 private:
-    bool isActive = false;
-    QUuid ownUuid, remoteUuid;
-    QJsonObject jsonKey;
-    QVector<int> pressedKeys;
+    bool _isActive = false;
+    QUuid _ownUuid, _remoteUuid;
+    QJsonObject _jsonKey;
+    QVector<int> _pressedKeys;
 
-    void paintEvent(QPaintEvent *e);
+    void paintEvent(QPaintEvent *e) final;
 
     bool event(QEvent *event) override;
     void sendKeyEventMessage(int keycode, bool pressed);

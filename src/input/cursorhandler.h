@@ -32,22 +32,22 @@ signals:
     void controlStateChanged(SharedCursor::ControlState state);
 
 private:
-    int timerId = 0;
-    SharedCursor::ControlState controlState = SharedCursor::SelfControl;
-    SharedCursor::ConnectionState currentTransitState = SharedCursor::Unknown;
-    QUuid transitUuid;
-    QUuid ownUuid;
-    QUuid controlledByUuid;
-    QJsonObject jsonDelta, jsonPosition, jsonRemoteControl;
-    QPoint lastCursorPosition = {0, 0};
-    QPoint holdCursorPosition = {0, 0};
-    QPoint lastCheckedCursorPosition = {0, 0};
-    bool deviceContainsDisableScreen = false;
-    QSharedPointer<SharedCursor::Device> currentDevice;
-    QMap<QUuid, QSharedPointer<SharedCursor::Device>> devices;
-    QMap<QUuid, SharedCursor::ConnectionState> connnetionStates;
+    int _timerId = 0;
+    SharedCursor::ControlState _controlState = SharedCursor::SelfControl;
+    SharedCursor::ConnectionState _currentTransitState = SharedCursor::Unknown;
+    QUuid _transitUuid;
+    QUuid _ownUuid;
+    QUuid _controlledByUuid;
+    QJsonObject _jsonDelta, _jsonPosition, _jsonRemoteControl;
+    QPoint _lastCursorPosition = {0, 0};
+    QPoint _holdCursorPosition = {0, 0};
+    QPoint _lastCheckedCursorPosition = {0, 0};
+    bool _deviceContainsDisableScreen = false;
+    QSharedPointer<SharedCursor::Device> _currentDevice;
+    QMap<QUuid, QSharedPointer<SharedCursor::Device>> _devices;
+    QMap<QUuid, SharedCursor::ConnectionState> _connnetionStates;
 
-    void timerEvent(QTimerEvent *e);
+    void timerEvent(QTimerEvent *e) final;
     void checkCursor(const QPoint &pos);
     void cursorCrossedTransit(const SharedCursor::Transit &transit, const QPoint &pos);
     void sendCursorDelta(const QUuid &uuid, const QPoint &pos);

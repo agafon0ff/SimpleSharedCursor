@@ -22,11 +22,11 @@ InputSimulator::InputSimulator(QObject *parent)
 
 void InputSimulator::setControlState(SharedCursor::ControlState state)
 {
-    if (controlState != state) {
-        if (controlState == SharedCursor::Slave) {
+    if (_controlState != state) {
+        if (_controlState == SharedCursor::Slave) {
             releasePressedKeys();
         }
-        controlState = state;
+        _controlState = state;
     }
 }
 
@@ -42,9 +42,9 @@ void InputSimulator::setCutsorDelta(const QPoint &pos)
 
 void InputSimulator::setKeyboardEvent(int keycode, bool state)
 {
-    if (!releaseProcess) {
-        if (state) pressedKeys.append(keycode);
-        else pressedKeys.removeOne(keycode);
+    if (!_releaseProcess) {
+        if (state) _pressedKeys.append(keycode);
+        else _pressedKeys.removeOne(keycode);
     }
 
 #ifdef Q_OS_UNIX
@@ -52,8 +52,8 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
 
     unsigned char code = 0;
 
-    auto it = keymap.find(keycode);
-    if (it != keymap.end()) {
+    auto it = _keymap.find(keycode);
+    if (it != _keymap.end()) {
         code = XKeysymToKeycode(display, it.value());
     }
     else {
@@ -93,9 +93,9 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
 
 void InputSimulator::setMouseEvent(int button, bool state)
 {
-    if (!releaseProcess) {
-        if (state) pressedMouse.append(button);
-        else pressedMouse.removeOne(button);
+    if (!_releaseProcess) {
+        if (state) _pressedMouse.append(button);
+        else _pressedMouse.removeOne(button);
     }
 
 #ifdef Q_OS_UNIX
@@ -173,27 +173,27 @@ void InputSimulator::setWheelEvent(int delta)
 
 void InputSimulator::releasePressedKeys()
 {
-    releaseProcess = true;
+    _releaseProcess = true;
 
-    if (!pressedKeys.empty()) {
-        for (int code: std::as_const(pressedKeys)) {
+    if (!_pressedKeys.empty()) {
+        for (int code: std::as_const(_pressedKeys)) {
             setKeyboardEvent(code, false);
         }
     }
 
-    if (!pressedMouse.empty()) {
-        for (int button: std::as_const(pressedMouse)) {
+    if (!_pressedMouse.empty()) {
+        for (int button: std::as_const(_pressedMouse)) {
             setMouseEvent(button, false);
         }
     }
 
-    releaseProcess = false;
+    _releaseProcess = false;
 }
 
 void InputSimulator::createKeymap()
 {
 #ifdef Q_OS_UNIX
-    keymap = {
+    _keymap = {
         { Qt::Key_Escape, XK_Escape },
         { Qt::Key_Tab, XK_Tab },
         { Qt::Key_Backspace, XK_BackSpace },

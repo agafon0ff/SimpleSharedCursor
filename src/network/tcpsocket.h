@@ -32,7 +32,7 @@ public:
     bool isConnected() const;
 
     friend bool operator==(const QUuid& uuid, const TcpSocket& socket) {
-        return uuid == socket.uuid;
+        return uuid == socket._uuid;
     }
 
 signals:
@@ -51,17 +51,17 @@ public slots:
     void sendMessage(const QJsonObject &json);
 
 private:
-    QUuid uuid;
-    QHostAddress host;
-    quint16 port = SharedCursor::DEFAULT_TCP_PORT;
+    QUuid _uuid;
+    QHostAddress _host;
+    quint16 _port = SharedCursor::DEFAULT_TCP_PORT;
     bool _isConnected = false;
-    QByteArray dataIn, dataInDec;
-    QByteArray dataOut, dataOutEnc;
-    QJsonObject jsonIn, jsonOut;
-    QString messageType;
-    QStack<int> dataSizes;
-    OpenSslWrapper sslWraper;
-    TcpSocket::Type type = TcpSocket::Type::Independent;
+    QByteArray _dataIn, _dataInDec;
+    QByteArray _dataOut, _dataOutEnc;
+    QJsonObject _jsonIn, _jsonOut;
+    QString _messageType;
+    QStack<int> _dataSizes;
+    OpenSslWrapper _sslWraper;
+    TcpSocket::Type _type = TcpSocket::Type::Independent;
 
     void appendDataSizeToOutBuffer();
     void extractDataSizesFromInputData();

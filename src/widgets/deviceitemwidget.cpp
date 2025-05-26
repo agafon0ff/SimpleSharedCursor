@@ -4,95 +4,95 @@
 
 DeviceItemWidget::DeviceItemWidget(QWidget *parent) :
     QWidget(parent),
-    pixmapConnected{"://img/connected.png"},
-    pixmapDisconnected{"://img/disconnected.png"}
+    _pixmapConnected{"://img/connected.png"},
+    _pixmapDisconnected{"://img/disconnected.png"}
 {
     setMinimumHeight(30);
     setMaximumHeight(30);
 
-    setLayout(&horizontalLayout);
-    horizontalLayout.setSpacing(0);
-    horizontalLayout.setContentsMargins(0, 0, 0, 0);
+    setLayout(&_horizontalLayout);
+    _horizontalLayout.setSpacing(0);
+    _horizontalLayout.setContentsMargins(0, 0, 0, 0);
 
-    labelStatus.setMinimumSize(QSize(30, 30));
-    labelStatus.setMaximumSize(QSize(30, 30));
-    labelStatus.setPixmap(QPixmap(":/img/disconnected.png"));
-    labelStatus.setScaledContents(true);
-    labelStatus.setAlignment(Qt::AlignCenter);
-    labelStatus.setMargin(3);
-    horizontalLayout.addWidget(&labelStatus);
+    _labelStatus.setMinimumSize(QSize(30, 30));
+    _labelStatus.setMaximumSize(QSize(30, 30));
+    _labelStatus.setPixmap(QPixmap(":/img/disconnected.png"));
+    _labelStatus.setScaledContents(true);
+    _labelStatus.setAlignment(Qt::AlignCenter);
+    _labelStatus.setMargin(3);
+    _horizontalLayout.addWidget(&_labelStatus);
 
-    labelName.setObjectName(QString::fromUtf8("labelName"));
-    labelName.setAlignment(Qt::AlignCenter);
-    horizontalLayout.addWidget(&labelName);
+    _labelName.setObjectName(QString::fromUtf8("labelName"));
+    _labelName.setAlignment(Qt::AlignCenter);
+    _horizontalLayout.addWidget(&_labelName);
 
-    labelHost.setObjectName(QString::fromUtf8("labelHost"));
-    labelHost.setAlignment(Qt::AlignCenter);
-    horizontalLayout.addWidget(&labelHost);
+    _labelHost.setObjectName(QString::fromUtf8("labelHost"));
+    _labelHost.setAlignment(Qt::AlignCenter);
+    _horizontalLayout.addWidget(&_labelHost);
 
-    btnRemove.setObjectName(QString::fromUtf8("btnRemove"));
-    btnRemove.setMinimumSize(QSize(27, 27));
-    btnRemove.setMaximumSize(QSize(27, 27));
-    btnRemove.setIcon(QIcon(":/img/cross.png"));
-    btnRemove.setFlat(true);
-    horizontalLayout.addWidget(&btnRemove);
+    _btnRemove.setObjectName(QString::fromUtf8("btnRemove"));
+    _btnRemove.setMinimumSize(QSize(27, 27));
+    _btnRemove.setMaximumSize(QSize(27, 27));
+    _btnRemove.setIcon(QIcon(":/img/cross.png"));
+    _btnRemove.setFlat(true);
+    _horizontalLayout.addWidget(&_btnRemove);
 
-    horizontalLayout.setStretch(1, 2);
-    horizontalLayout.setStretch(2, 1);
+    _horizontalLayout.setStretch(1, 2);
+    _horizontalLayout.setStretch(2, 1);
 
-    connect(&btnRemove, &QPushButton::clicked, this, [this]{ emit removeClicked(uuid); });
+    connect(&_btnRemove, &QPushButton::clicked, this, [this]{ emit removeClicked(_uuid); });
 }
 
 DeviceItemWidget::~DeviceItemWidget()
 {
 }
 
-void DeviceItemWidget::setUuid(const QUuid &_uuid)
+void DeviceItemWidget::setUuid(const QUuid &uuid)
 {
-    uuid = _uuid;
+    _uuid = uuid;
 }
 
 QUuid DeviceItemWidget::getUuid() const
 {
-    return uuid;
+    return _uuid;
 }
 
 void DeviceItemWidget::setName(const QString &name)
 {
-    labelName.setText(name);
+    _labelName.setText(name);
 }
 
 void DeviceItemWidget::setHost(const QHostAddress &host)
 {
-    labelHost.setText(QHostAddress(host.toIPv4Address()).toString());
+    _labelHost.setText(QHostAddress(host.toIPv4Address()).toString());
 }
 
 void DeviceItemWidget::setState(SharedCursor::ConnectionState _state)
 {
-    state = _state;
-    switch(state) {
+    _state = _state;
+    switch(_state) {
     case SharedCursor::Unknown:
-        labelStatus.setPixmap(pixmapDisconnected);
+        _labelStatus.setPixmap(_pixmapDisconnected);
         break;
     case SharedCursor::Disconnected:
-        labelStatus.setPixmap(pixmapDisconnected);
+        _labelStatus.setPixmap(_pixmapDisconnected);
         break;
     case SharedCursor::Connected:
-        labelStatus.setPixmap(pixmapConnected);
+        _labelStatus.setPixmap(_pixmapConnected);
         break;
     case SharedCursor::Waiting:
-        labelStatus.setPixmap(pixmapDisconnected);
+        _labelStatus.setPixmap(_pixmapDisconnected);
         break;
     }
 }
 
 void DeviceItemWidget::setSelfState(bool self)
 {
-    selfState = self;
-    btnRemove.setVisible(!self);
+    _selfState = self;
+    _btnRemove.setVisible(!self);
 
     if (self)
-        labelStatus.setPixmap(pixmapConnected);
+        _labelStatus.setPixmap(_pixmapConnected);
 }
 
 void DeviceItemWidget::paintEvent(QPaintEvent *)

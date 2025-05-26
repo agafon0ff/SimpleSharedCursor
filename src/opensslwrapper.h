@@ -10,6 +10,6 @@ public:
     bool decrypt(const char* input, int size, QByteArray &output);
 
 private:
-    QByteArray key, iv;
+    QByteArray _key, _iv;
 };
 

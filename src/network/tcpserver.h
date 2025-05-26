@@ -20,7 +20,7 @@ signals:
     void newSocketConnected(qintptr socketDescriptor);
 
 private:
-    quint16 port = SharedCursor::DEFAULT_TCP_PORT;
+    quint16 _port = SharedCursor::DEFAULT_TCP_PORT;
     void incomingConnection(qintptr socketDescriptor);
 
 };

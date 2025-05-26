@@ -38,8 +38,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount());
-
     Settings.loadFacadeProperties();
 
     ClipboardHandler clipboardHandler;
