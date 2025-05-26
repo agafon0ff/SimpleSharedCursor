@@ -66,9 +66,15 @@ TRANSLATIONS += \
     tr/ShareCursor_en.ts
 
 
-win32: \
-    INCLUDEPATH += "C:/Program Files (x86)/OpenSSL-Win32/include" \
-    LIBS += "C:/Program Files (x86)/OpenSSL-Win32/bin/libcrypto-3.dll"
+win32 {
+    !exists($$(OPENSSL_DIR)/include/openssl/evp.h) {
+        error("OpenSSL not found!")
+    }
 
-linux-g++: \
+    INCLUDEPATH += $(OPENSSL_INCLUDE_PATH)
+    LIBS += -L$$(OPENSSL_DIR)/lib -lcrypto
+}
+
+linux:!android {
     LIBS += -lX11 -lXtst -lcrypto
+}
