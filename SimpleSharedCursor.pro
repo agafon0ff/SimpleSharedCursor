@@ -13,6 +13,7 @@ QMAKE_CXXFLAGS_RELEASE += -O2
 INCLUDEPATH += \
     src \
     src/input \
+    src/input/inputsimulator \
     src/network \
     src/settings \
     src/widgets
@@ -22,8 +23,9 @@ SOURCES += \
     src/opensslwrapper.cpp \
     src/input/clipboardhandler.cpp \
     src/input/cursorhandler.cpp \
-    src/input/inputsimulator.cpp \
     src/input/inputhandler.cpp \
+    src/input/inputsimulator/inputsimulatorlinux.cpp \
+    src/input/inputsimulator/inputsimulatorwindows.cpp \
     src/network/broadcastdevicesearch.cpp \
     src/network/deviceconnectmanager.cpp \
     src/network/tcpserver.cpp \
@@ -42,8 +44,8 @@ HEADERS += \
     src/opensslwrapper.h \
     src/input/clipboardhandler.h \
     src/input/cursorhandler.h \
-    src/input/inputsimulator.h \
     src/input/inputhandler.h \
+    src/input/inputsimulator/inputsimulator.h \
     src/network/deviceconnectmanager.h \
     src/network/broadcastdevicesearch.h \
     src/network/tcpserver.h \
@@ -71,7 +73,7 @@ win32 {
         error("OpenSSL not found!")
     }
 
-    INCLUDEPATH += $(OPENSSL_INCLUDE_PATH)
+    INCLUDEPATH += $$(OPENSSL_DIR)/include
     LIBS += -L$$(OPENSSL_DIR)/lib -lcrypto
 }
 
