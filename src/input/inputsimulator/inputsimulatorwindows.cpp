@@ -29,7 +29,7 @@ void InputSimulator::setControlState(SharedCursor::ControlState state)
     }
 }
 
-void InputSimulator::setCutsorPosition(const QPoint &pos)
+void InputSimulator::setCursorPosition(const QPoint &pos)
 {
     QCursor::setPos(pos);
 }
