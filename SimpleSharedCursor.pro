@@ -74,7 +74,7 @@ win32 {
     }
 
     INCLUDEPATH += $$(OPENSSL_DIR)/include
-    LIBS += -L$$(OPENSSL_DIR)/lib -lcrypto
+    LIBS += $$(OPENSSL_DIR)/bin/libcrypto-3-x64.dll
 }
 
 linux:!android {

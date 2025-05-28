@@ -9,7 +9,7 @@
 #include "winuser.h"
 
 InputSimulator::InputSimulator(QObject *parent)
-    : InputSimulator{parent}
+    : QObject{parent}
 {
     createKeymap();
 }
