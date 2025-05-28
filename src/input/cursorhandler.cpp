@@ -4,6 +4,7 @@
 #include <qmath.h>
 
 #include "cursorhandler.h"
+#include "utils.h"
 
 static const int UPDATE_INTERVAL = 25;
 
@@ -100,6 +101,12 @@ void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::Connecti
     qDebug() << Q_FUNC_INFO << uuid << state << _controlState;
 }
 
+void CursorHandler::setRemoteCursorDelta(const QPoint &pos)
+{
+    Q_UNUSED(pos);
+    _lastRemoteCursorTime = QDateTime::currentDateTime();
+}
+
 void CursorHandler::setRemoteCursorPos(const QPoint &pos)
 {
     if (_controlState == SharedCursor::Master) {
@@ -136,6 +143,9 @@ void CursorHandler::timerEvent(QTimerEvent *e)
         checkCursor(pos);
         break;
     case SharedCursor::Master:
+        if (pos == _lastCursorPosition)
+            break;
+
         setCursorPosition(_holdCursorPosition);
         sendCursorMessage(_transitUuid, SharedCursor::KEY_CURSOR_DELTA, pos - _holdCursorPosition);
         break;

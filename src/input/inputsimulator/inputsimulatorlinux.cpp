@@ -38,7 +38,7 @@ void InputSimulator::setCutsorPosition(const QPoint &pos)
     QCursor::setPos(pos);
 }
 
-void InputSimulator::setCutsorDelta(const QPoint &pos)
+void InputSimulator::setCursorDelta(const QPoint &pos)
 {
     QCursor::setPos(QCursor::pos() + pos);
 }

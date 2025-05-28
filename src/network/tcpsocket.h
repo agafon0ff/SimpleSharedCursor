@@ -21,7 +21,7 @@ public:
         ServerOwned
     };
 
-    void setType(TcpSocket::Type _type);
+    void setType(TcpSocket::Type type);
     TcpSocket::Type getType() const;
 
     bool isUuidEqual(const QUuid &uuid) const;

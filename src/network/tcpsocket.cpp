@@ -26,10 +26,10 @@ TcpSocket::~TcpSocket()
     stop();
 }
 
-void TcpSocket::setType(Type _type)
+void TcpSocket::setType(Type type)
 {
-    qDebug() << Q_FUNC_INFO << _type;
-    _type = _type;
+    qDebug() << Q_FUNC_INFO << type;
+    _type = type;
 }
 
 TcpSocket::Type TcpSocket::getType() const
