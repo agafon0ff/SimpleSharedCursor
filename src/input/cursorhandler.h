@@ -49,9 +49,11 @@ private:
     QMap<QUuid, QSharedPointer<SharedCursor::Device>> _devices;
     QMap<QUuid, SharedCursor::ConnectionState> _connnetionStates;
     QDateTime _lastRemoteCursorTime;
+    int _selfCotrolInSlaveModeCounter = 0;
 
     void timerEvent(QTimerEvent *e) final;
     void checkCursor(const QPoint &pos);
+    void checkSelfControlInSlaveMode(const QPoint &pos);
     void cursorCrossedTransit(const SharedCursor::Transit &transit, const QPoint &pos);
     void sendCursorDelta(const QUuid &uuid, const QPoint &pos);
     void sendCursorPosition(const QUuid &uuid, const QPoint &pos);

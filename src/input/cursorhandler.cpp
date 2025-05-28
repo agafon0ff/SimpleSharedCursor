@@ -109,9 +109,8 @@ void CursorHandler::setRemoteCursorDelta(const QPoint &pos)
 
 void CursorHandler::setRemoteCursorPos(const QPoint &pos)
 {
-    if (_controlState == SharedCursor::Master) {
+    if (_controlState == SharedCursor::Master)
         checkCursor(pos);
-    }
 }
 
 void CursorHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
@@ -151,6 +150,7 @@ void CursorHandler::timerEvent(QTimerEvent *e)
         break;
     case SharedCursor::Slave:
         sendCursorMessage(_controlledByUuid,SharedCursor::KEY_CURSOR_POS, pos);
+        checkSelfControlInSlaveMode(pos);
         break;
     }
 
@@ -211,6 +211,29 @@ void CursorHandler::checkCursor(const QPoint &pos)
         return;
 
     cursorCrossedTransit(*transitIterator, pos);
+}
+
+void CursorHandler::checkSelfControlInSlaveMode(const QPoint &pos)
+{
+    if (_lastRemoteCursorTime.addMSecs(1000) < QDateTime::currentDateTime() &&
+        pos != _lastCursorPosition)
+    {
+        ++_selfCotrolInSlaveModeCounter;
+    }
+    else
+    {
+        _selfCotrolInSlaveModeCounter = 0;
+    }
+
+    if (_selfCotrolInSlaveModeCounter > 10)
+    {
+        _transitUuid = _ownUuid;
+        updateControlState(SharedCursor::SelfControl);
+        emit remoteControl(_ownUuid, _transitUuid);
+        _selfCotrolInSlaveModeCounter = 0;
+
+        qDebug() << Q_FUNC_INFO << _transitUuid << _controlState;
+    }
 }
 
 void CursorHandler::cursorCrossedTransit(const SharedCursor::Transit &transit, const QPoint &pos)
