@@ -38,11 +38,11 @@ signals:
 
 private:
     Ui::SettingsWidget *ui;
-    ScreenPositionWidget *positioningWidget = nullptr;
-    QMap<QUuid, DeviceItemWidget*> deviceWidgets;
-    QMap<QUuid, QListWidgetItem*> listIitemWidgets;
-    JsonLoader geometryLoader;
-    QVector<QUuid> removeList;
+    ScreenPositionWidget *_positioningWidget = nullptr;
+    QMap<QUuid, DeviceItemWidget*> _deviceWidgets;
+    QMap<QUuid, QListWidgetItem*> _listIitemWidgets;
+    JsonLoader _geometryLoader;
+    QVector<QUuid> _removeList;
 
     void createFoundDeviceWidget(QSharedPointer<SharedCursor::Device> device);
     void removeDeviceFromListWidget(const QUuid &uuid);

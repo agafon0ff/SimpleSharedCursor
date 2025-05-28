@@ -21,7 +21,7 @@ void JsonLoader::load(const char* path, bool backup)
     }
 
     QJsonParseError jsonError;
-    values = QJsonDocument::fromJson(jsonData, &jsonError).object();
+    _values = QJsonDocument::fromJson(jsonData, &jsonError).object();
 
     if (!backup)
         return;
@@ -35,11 +35,11 @@ void JsonLoader::load(const char* path, bool backup)
             backupFile.close();
         }
 
-        values = QJsonDocument::fromJson(jsonData, &jsonError).object();
+        _values = QJsonDocument::fromJson(jsonData, &jsonError).object();
     }
 
     if(jsonError.error != QJsonParseError::NoError)
-        values = QJsonObject();
+        _values = QJsonObject();
 
     if(backupFile.open(QIODevice::WriteOnly))
     {
@@ -60,25 +60,25 @@ void JsonLoader::save(const char* path)
     QFile file(path);
     if(file.open(QIODevice::WriteOnly))
     {
-        file.write(QJsonDocument(values).toJson());
+        file.write(QJsonDocument(_values).toJson());
         file.close();
     }
 }
 
 void JsonLoader::setValue(const char *key, const QJsonValue &value)
 {
-    if (values.contains(key)) {
-        values[key] = value;
+    if (_values.contains(key)) {
+        _values[key] = value;
     }
     else {
-        values.insert(key, value);
+        _values.insert(key, value);
     }
 }
 
 QJsonValue JsonLoader::value(const char *key, const QJsonValue &defaultValue)
 {
-    if(values.contains(key)) {
-        return values.value(key);
+    if(_values.contains(key)) {
+        return _values.value(key);
     }
 
     if(!defaultValue.isNull()) {

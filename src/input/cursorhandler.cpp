@@ -17,15 +17,15 @@ CursorHandler::~CursorHandler()
 {
     qDebug() << Q_FUNC_INFO;
 
-    if (timerId)
-        killTimer(timerId);
+    if (_timerId)
+        killTimer(_timerId);
 }
 
 void CursorHandler::start()
 {
     qDebug() << Q_FUNC_INFO;
 
-    timerId = startTimer(UPDATE_INTERVAL);
+    _timerId = startTimer(UPDATE_INTERVAL);
     emit started();
 }
 
@@ -33,9 +33,9 @@ void CursorHandler::stop()
 {
     qDebug() << Q_FUNC_INFO;
 
-    if (timerId) {
-        killTimer(timerId);
-        timerId = 0;
+    if (_timerId) {
+        killTimer(_timerId);
+        _timerId = 0;
     }
 
     emit finished();
@@ -44,121 +44,121 @@ void CursorHandler::stop()
 void CursorHandler::setHoldCursorPosition(const QPoint &pos)
 {
     qDebug() << Q_FUNC_INFO << pos;
-    holdCursorPosition = pos;
+    _holdCursorPosition = pos;
 }
 
 void CursorHandler::setCurrentUuid(const QUuid &uuid)
 {
     qDebug() << Q_FUNC_INFO << uuid;
 
-    transitUuid = uuid;
-    ownUuid = uuid;
-    controlledByUuid = uuid;
-    connnetionStates[uuid] = SharedCursor::Connected;
+    _transitUuid = uuid;
+    _ownUuid = uuid;
+    _controlledByUuid = uuid;
+    _connnetionStates[uuid] = SharedCursor::Connected;
 
-    auto it = devices.find(uuid);
-    if (it != devices.end()) {
-        currentDevice = it.value();
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
+        _currentDevice = it.value();
     }
     else {
-        currentDevice.clear();
+        _currentDevice.clear();
     }
 }
 
-void CursorHandler::setDevices(const QMap<QUuid, QSharedPointer<SharedCursor::Device> > &_devices)
+void CursorHandler::setDevices(const QMap<QUuid, QSharedPointer<SharedCursor::Device> > &devices)
 {
     qDebug() << Q_FUNC_INFO;
 
-    devices = _devices;
-    currentDevice = _devices.value(ownUuid);
+    _devices = devices;
+    _currentDevice = devices.value(_ownUuid);
 }
 
 void CursorHandler::setConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state)
 {
-    connnetionStates[uuid] = state;
+    _connnetionStates[uuid] = state;
 
-    switch (controlState) {
+    switch (_controlState) {
     case SharedCursor::SelfControl:
         break;
     case SharedCursor::Master:
-        if (uuid == transitUuid && state != SharedCursor::Connected) {
+        if (uuid == _transitUuid && state != SharedCursor::Connected) {
             updateControlState(SharedCursor::SelfControl);
-            transitUuid = ownUuid;
-            currentDevice = devices.value(transitUuid);
-            emit remoteControl(ownUuid, ownUuid);
+            _transitUuid = _ownUuid;
+            _currentDevice = _devices.value(_transitUuid);
+            emit remoteControl(_ownUuid, _ownUuid);
         }
         break;
     case SharedCursor::Slave:
-        if (uuid == controlledByUuid && state != SharedCursor::Connected) {
+        if (uuid == _controlledByUuid && state != SharedCursor::Connected) {
             updateControlState(SharedCursor::SelfControl);
-            transitUuid = ownUuid;
-            currentDevice = devices.value(transitUuid);
+            _transitUuid = _ownUuid;
+            _currentDevice = _devices.value(_transitUuid);
         }
         break;
     }
 
-    qDebug() << Q_FUNC_INFO << uuid << state << controlState;
+    qDebug() << Q_FUNC_INFO << uuid << state << _controlState;
 }
 
 void CursorHandler::setRemoteCursorPos(const QPoint &pos)
 {
-    if (controlState == SharedCursor::Master) {
+    if (_controlState == SharedCursor::Master) {
         checkCursor(pos);
     }
 }
 
 void CursorHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
 {
-    controlledByUuid = master;
+    _controlledByUuid = master;
 
     if (master != slave) {
-        if (ownUuid == master) updateControlState(SharedCursor::Master);
-        else if(ownUuid == slave) updateControlState(SharedCursor::Slave);
+        if (_ownUuid == master) updateControlState(SharedCursor::Master);
+        else if(_ownUuid == slave) updateControlState(SharedCursor::Slave);
         else updateControlState(SharedCursor::SelfControl);
     }
     else {
         updateControlState(SharedCursor::SelfControl);
-        setCursorPosition(holdCursorPosition);
+        setCursorPosition(_holdCursorPosition);
     }
 
-    qDebug() << Q_FUNC_INFO << master << slave << controlState;
+    qDebug() << Q_FUNC_INFO << master << slave << _controlState;
 }
 
 void CursorHandler::timerEvent(QTimerEvent *e)
 {
-    if (e->timerId() != timerId)
+    if (e->timerId() != _timerId)
         return;
 
     const QPoint &pos = QCursor::pos();
 
-    switch (controlState) {
+    switch (_controlState) {
     case SharedCursor::SelfControl:
         checkCursor(pos);
         break;
     case SharedCursor::Master:
-        setCursorPosition(holdCursorPosition);
-        sendCursorMessage(transitUuid, SharedCursor::KEY_CURSOR_DELTA, pos - holdCursorPosition);
+        setCursorPosition(_holdCursorPosition);
+        sendCursorMessage(_transitUuid, SharedCursor::KEY_CURSOR_DELTA, pos - _holdCursorPosition);
         break;
     case SharedCursor::Slave:
-        sendCursorMessage(controlledByUuid,SharedCursor::KEY_CURSOR_POS, pos);
+        sendCursorMessage(_controlledByUuid,SharedCursor::KEY_CURSOR_POS, pos);
         break;
     }
 
-    lastCursorPosition = pos;
+    _lastCursorPosition = pos;
 }
 
 void CursorHandler::checkCursor(const QPoint &pos)
 {
-    if (currentDevice.isNull())
+    if (_currentDevice.isNull())
         return;
 
-    if (currentDevice->transits.isEmpty())
+    if (_currentDevice->transits.isEmpty())
         return;
 
     // point belongs to the line
-    QUuid newTransitUuid = transitUuid;
-    auto transitIterator = currentDevice->transits.begin();
-    for (; transitIterator<currentDevice->transits.end(); ++transitIterator) {
+    QUuid newTransitUuid = _transitUuid;
+    auto transitIterator = _currentDevice->transits.begin();
+    for (; transitIterator<_currentDevice->transits.end(); ++transitIterator) {
         const QLine &line = transitIterator->line;
         if (line.x1() <= pos.x() && line.x2() >= pos.x() &&
             line.y1() <= pos.y() && line.y2() >= pos.y()) {
@@ -170,7 +170,7 @@ void CursorHandler::checkCursor(const QPoint &pos)
     }
 
     // point just crossed the disabled screen
-    auto screens = currentDevice->screens;
+    auto screens = _currentDevice->screens;
     for (auto screenIt=screens.begin(); screenIt<screens.end(); ++screenIt) {
         if (screenIt->enabled)
             continue;
@@ -178,10 +178,10 @@ void CursorHandler::checkCursor(const QPoint &pos)
         if (!screenIt->rect.contains(pos))
             continue;
 
-        transitIterator = currentDevice->transits.begin();
-        QLineF lineF(pos, lastCheckedCursorPosition);
+        transitIterator = _currentDevice->transits.begin();
+        QLineF lineF(pos, _lastCheckedCursorPosition);
 
-        for (; transitIterator<currentDevice->transits.end(); ++transitIterator) {
+        for (; transitIterator<_currentDevice->transits.end(); ++transitIterator) {
             if (!lineF.intersects(transitIterator->line.toLineF()))
                 continue;
 
@@ -191,13 +191,13 @@ void CursorHandler::checkCursor(const QPoint &pos)
             break;
         }
 
-        if (transitIterator != currentDevice->transits.end())
+        if (transitIterator != _currentDevice->transits.end())
             break;
     }
 
-    lastCheckedCursorPosition = pos;
+    _lastCheckedCursorPosition = pos;
 
-    if (newTransitUuid == transitUuid)
+    if (newTransitUuid == _transitUuid)
         return;
 
     cursorCrossedTransit(*transitIterator, pos);
@@ -207,40 +207,40 @@ void CursorHandler::cursorCrossedTransit(const SharedCursor::Transit &transit, c
 {
     QUuid newTransitUuid = transit.uuid;
 
-    if (connnetionStates.value(newTransitUuid) != SharedCursor::Connected )
+    if (_connnetionStates.value(newTransitUuid) != SharedCursor::Connected )
         return;
 
-    if (!devices.contains(newTransitUuid))
+    if (!_devices.contains(newTransitUuid))
         return;
 
-    transitUuid = newTransitUuid;
-    currentTransitState = connnetionStates.value(transitUuid);
-    currentDevice = devices.value(transitUuid);
+    _transitUuid = newTransitUuid;
+    _currentTransitState = _connnetionStates.value(_transitUuid);
+    _currentDevice = _devices.value(_transitUuid);
 
     const QPoint remotePos = calculateRemotePos(transit, pos);
-    emit remoteControl(ownUuid, transitUuid);
-    sendCursorMessage(transitUuid, SharedCursor::KEY_INIT_CURSOR_POS, remotePos);
+    emit remoteControl(_ownUuid, _transitUuid);
+    sendCursorMessage(_transitUuid, SharedCursor::KEY_INIT_CURSOR_POS, remotePos);
 
-    if (transitUuid == ownUuid) {
+    if (_transitUuid == _ownUuid) {
         updateControlState(SharedCursor::SelfControl);
         setCursorPosition(remotePos);
     }
     else {
         updateControlState(SharedCursor::Master);
-        setCursorPosition(holdCursorPosition);
+        setCursorPosition(_holdCursorPosition);
     }
 
-    qDebug() << Q_FUNC_INFO << transitUuid << controlState;
+    qDebug() << Q_FUNC_INFO << _transitUuid << _controlState;
 }
 
 void CursorHandler::sendCursorMessage(const QUuid &uuid, const char *type, const QPoint &pos)
 {
-    if (pos == lastCursorPosition)
+    if (pos == _lastCursorPosition)
         return;
 
-    jsonPosition[SharedCursor::KEY_TYPE] = type;
-    jsonPosition[SharedCursor::KEY_VALUE] = SharedCursor::pointToJsonValue(pos);
-    emit message(uuid, jsonPosition);
+    _jsonPosition[SharedCursor::KEY_TYPE] = type;
+    _jsonPosition[SharedCursor::KEY_VALUE] = SharedCursor::pointToJsonValue(pos);
+    emit message(uuid, _jsonPosition);
 }
 
 void CursorHandler::setCursorPosition(const QPoint &pos)
@@ -250,8 +250,8 @@ void CursorHandler::setCursorPosition(const QPoint &pos)
 
 void CursorHandler::updateControlState(SharedCursor::ControlState state)
 {
-    if (controlState != state) {
-        controlState = state;
+    if (_controlState != state) {
+        _controlState = state;
         emit controlStateChanged(state);
     }
 }

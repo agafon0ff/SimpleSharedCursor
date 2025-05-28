@@ -6,14 +6,14 @@
 static const int BLOCK_SIZE = 16;
 static const int EVP_KEY_SIZE = 32;
 
-void OpenSslWrapper::setKey(const QByteArray &_key)
+void OpenSslWrapper::setKey(const QByteArray &key)
 {
-    key.resize(EVP_KEY_SIZE);
-    std::iota(key.begin(), key.end(), 0x00);
-    std::copy(_key.data(), _key.data() + ((_key.size() < EVP_KEY_SIZE) ? _key.size() : EVP_KEY_SIZE), key.begin());
+    _key.resize(EVP_KEY_SIZE);
+    std::iota(_key.begin(), _key.end(), 0x00);
+    std::copy(key.data(), key.data() + ((key.size() < EVP_KEY_SIZE) ? key.size() : EVP_KEY_SIZE), _key.begin());
 
-    iv = "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x30\x31\x32\x33\x34\x35";
-    std::copy(_key.data(), _key.data() + ((_key.size() < iv.size()) ? _key.size() : iv.size()), iv.begin());
+    _iv = "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x30\x31\x32\x33\x34\x35";
+    std::copy(key.data(), key.data() + ((key.size() < _iv.size()) ? key.size() : _iv.size()), _iv.begin());
 }
 
 bool OpenSslWrapper::encrypt(const char *input, int size, QByteArray &output)
@@ -21,8 +21,8 @@ bool OpenSslWrapper::encrypt(const char *input, int size, QByteArray &output)
     std::unique_ptr<EVP_CIPHER_CTX, decltype(&::EVP_CIPHER_CTX_free)> ctx(EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free);
 
     int rc = EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_cbc(), NULL,
-                                reinterpret_cast<const unsigned char*>(key.constData()),
-                                reinterpret_cast<const unsigned char*>(iv.constData()));
+                                reinterpret_cast<const unsigned char*>(_key.constData()),
+                                reinterpret_cast<const unsigned char*>(_iv.constData()));
     if (rc != 1) return false;
 
     output.resize(size + BLOCK_SIZE);
@@ -45,8 +45,8 @@ bool OpenSslWrapper::decrypt(const char *input, int size, QByteArray &output)
     std::unique_ptr<EVP_CIPHER_CTX, decltype(&::EVP_CIPHER_CTX_free)> ctx(EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free);
 
     int rc = EVP_DecryptInit_ex(ctx.get(), EVP_aes_256_cbc(), NULL,
-                            reinterpret_cast<const unsigned char*>(key.constData()),
-                            reinterpret_cast<const unsigned char*>(iv.constData()));
+                            reinterpret_cast<const unsigned char*>(_key.constData()),
+                            reinterpret_cast<const unsigned char*>(_iv.constData()));
     if (rc != 1) return false;
 
     output.resize(size);

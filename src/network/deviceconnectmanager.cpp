@@ -7,14 +7,14 @@ DeviceConnectManager::DeviceConnectManager(QObject *parent)
     : QObject{parent}
 {
     qDebug() << Q_FUNC_INFO;
-    jsonRemoteControl[SharedCursor::KEY_TYPE] = SharedCursor::KEY_REMOTE_CONTROL;
+    _jsonRemoteControl[SharedCursor::KEY_TYPE] = SharedCursor::KEY_REMOTE_CONTROL;
 }
 
 DeviceConnectManager::~DeviceConnectManager()
 {
     qDebug() << Q_FUNC_INFO;
-    tempSockets.clear();
-    devices.clear();
+    _tempSockets.clear();
+    _devices.clear();
 }
 
 void DeviceConnectManager::setPort(quint16 port)
@@ -33,7 +33,7 @@ void DeviceConnectManager::setKeyword(const QString &keyword)
     qDebug() << Q_FUNC_INFO;
     _keyword = keyword;
 
-    for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
+    for (auto it = _devices.constBegin(); it != _devices.constEnd(); ++it) {
         if (!it.value().isNull()) {
             it.value()->setKeyword(_keyword);
         }
@@ -44,13 +44,13 @@ void DeviceConnectManager::start()
 {
     qDebug() << Q_FUNC_INFO;
 
-    devices.clear();
+    _devices.clear();
 
-    server = QSharedPointer<TcpServer>(new TcpServer);
-    server->setPort(_port);
-    server->start();
+    _server = QSharedPointer<TcpServer>(new TcpServer);
+    _server->setPort(_port);
+    _server->start();
 
-    connect(server.get(), &TcpServer::newSocketConnected, this, &DeviceConnectManager::onSocketConnected);
+    connect(_server.get(), &TcpServer::newSocketConnected, this, &DeviceConnectManager::onSocketConnected);
 
     emit started();
 }
@@ -59,10 +59,10 @@ void DeviceConnectManager::stop()
 {
     qDebug() << Q_FUNC_INFO;
 
-    disconnect(server.get(), &TcpServer::newSocketConnected, this, &DeviceConnectManager::onSocketConnected);
+    disconnect(_server.get(), &TcpServer::newSocketConnected, this, &DeviceConnectManager::onSocketConnected);
 
-    devices.clear();
-    server.clear();
+    _devices.clear();
+    _server.clear();
 
     emit finished();
 }
@@ -75,9 +75,9 @@ void DeviceConnectManager::connectToDevice(const QUuid &uuid, const QHostAddress
         return;
     }
 
-    auto it = devices.find(uuid);
-    if (it != devices.end()) {
-        QSharedPointer<TcpSocket> socket = devices.value(uuid);
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
+        QSharedPointer<TcpSocket> socket = _devices.value(uuid);
         if(!socket.isNull() && socket->isConnected()) {
             emit deviceConnectionChanged(uuid, SharedCursor::Connected);
             return;
@@ -99,20 +99,20 @@ void DeviceConnectManager::connectToDevice(const QUuid &uuid, const QHostAddress
 
 void DeviceConnectManager::sendMessage(const QUuid &uuid, const QJsonObject &json)
 {
-    auto it = devices.find(uuid);
-    if (it != devices.end() && !it.value().isNull()) {
+    auto it = _devices.find(uuid);
+    if (it != _devices.end() && !it.value().isNull()) {
         it.value()->sendMessage(json);
     }
 }
 
 void DeviceConnectManager::sendRemoteControlMessage(const QUuid &master, const QUuid &slave)
 {
-    jsonRemoteControl[SharedCursor::KEY_MASTER] = master.toString();
-    jsonRemoteControl[SharedCursor::KEY_SLAVE] = slave.toString();
+    _jsonRemoteControl[SharedCursor::KEY_MASTER] = master.toString();
+    _jsonRemoteControl[SharedCursor::KEY_SLAVE] = slave.toString();
 
-    for (auto it = devices.constBegin(); it != devices.constEnd(); ++it) {
+    for (auto it = _devices.constBegin(); it != _devices.constEnd(); ++it) {
         if (it.key() != _uuid && !it.value().isNull()) {
-            it.value()->sendMessage(jsonRemoteControl);
+            it.value()->sendMessage(_jsonRemoteControl);
         }
     }
 }
@@ -120,10 +120,10 @@ void DeviceConnectManager::sendRemoteControlMessage(const QUuid &master, const Q
 void DeviceConnectManager::handleRemoveDevice(const QUuid &uuid)
 {
     qDebug() << Q_FUNC_INFO;
-    if (!devices.contains(uuid))
+    if (!_devices.contains(uuid))
         return;
 
-    devices.remove(uuid);
+    _devices.remove(uuid);
 }
 
 void DeviceConnectManager::handleDeviceConnected(TcpSocket *socket, const QJsonObject &json)
@@ -136,8 +136,8 @@ void DeviceConnectManager::handleDeviceConnected(TcpSocket *socket, const QJsonO
     if (socketPtr.isNull())
         return;
 
-    auto it = devices.find(uuid);
-    if (it != devices.end()) {
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
         if (!it.value()->isConnected()) {
             it.value().swap(socketPtr);
             emit deviceConnectionChanged(uuid, SharedCursor::Connected);
@@ -146,7 +146,7 @@ void DeviceConnectManager::handleDeviceConnected(TcpSocket *socket, const QJsonO
             disconnectSocket(socketPtr);
         }
     } else {
-        devices.insert(uuid, socketPtr);
+        _devices.insert(uuid, socketPtr);
         emit deviceConnectionChanged(uuid, SharedCursor::Connected);
     }
 }
@@ -160,8 +160,8 @@ void DeviceConnectManager::handleDeviceDisconnected(TcpSocket *socket)
 
     qDebug() << Q_FUNC_INFO << uuid;
 
-    auto it = devices.find(uuid);
-    if (it != devices.end()) {
+    auto it = _devices.find(uuid);
+    if (it != _devices.end()) {
         disconnectSocket(it.value());
         emit deviceConnectionChanged(uuid, SharedCursor::Disconnected);
     }
@@ -261,7 +261,7 @@ void DeviceConnectManager::disconnectSocket(QSharedPointer<TcpSocket> socket)
 void DeviceConnectManager::pushTempSocket(QSharedPointer<TcpSocket> socket)
 {
     bool exist = false;
-    for (auto &socketPtr: std::as_const(tempSockets)) {
+    for (auto &socketPtr: std::as_const(_tempSockets)) {
         if (socketPtr.get() == socket) {
             exist = true;
             break;
@@ -269,17 +269,17 @@ void DeviceConnectManager::pushTempSocket(QSharedPointer<TcpSocket> socket)
     }
 
     if (!exist) {
-        tempSockets.append(socket);
+        _tempSockets.append(socket);
     }
 }
 
 QSharedPointer<TcpSocket> DeviceConnectManager::popTempSocket(TcpSocket *socket)
 {
     QSharedPointer<TcpSocket> result;
-    for (auto &socketPtr: std::as_const(tempSockets)) {
+    for (auto &socketPtr: std::as_const(_tempSockets)) {
         if (socketPtr.get() == socket) {
             result = socketPtr;
-            tempSockets.removeOne(socketPtr);
+            _tempSockets.removeOne(socketPtr);
             break;
         }
     }

@@ -52,11 +52,11 @@ private slots:
 private:
     QUuid _uuid;
     QString _keyword;
-    QJsonObject jsonRemoteControl;
+    QJsonObject _jsonRemoteControl;
     quint16 _port = SharedCursor::DEFAULT_TCP_PORT;
-    QMap<QUuid, QSharedPointer<TcpSocket>> devices;
-    QVector<QSharedPointer<TcpSocket>> tempSockets;
-    QSharedPointer<TcpServer> server;
+    QMap<QUuid, QSharedPointer<TcpSocket>> _devices;
+    QVector<QSharedPointer<TcpSocket>> _tempSockets;
+    QSharedPointer<TcpServer> _server;
 
     QJsonObject devicePtrToJsonObject(QSharedPointer<SharedCursor::Device> device);
     QSharedPointer<SharedCursor::Device> jsonObjectToDevicePtr(const QJsonObject &obj);

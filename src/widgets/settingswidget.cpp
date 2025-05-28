@@ -19,8 +19,8 @@ SettingsWidget::SettingsWidget(QWidget *parent)
     connect(ui->btnOk, &QPushButton::clicked, this, &SettingsWidget::onBtnOkClicked);
     connect(ui->btnCancel, &QPushButton::clicked, this, &SettingsWidget::onBtnCancelClicked);
 
-    positioningWidget = new ScreenPositionWidget(this);
-    ui->positioningLayout->addWidget(positioningWidget, 0, 0);
+    _positioningWidget = new ScreenPositionWidget(this);
+    ui->positioningLayout->addWidget(_positioningWidget, 0, 0);
 }
 
 SettingsWidget::~SettingsWidget()
@@ -33,9 +33,9 @@ void SettingsWidget::initialize()
 {
     qDebug() << Q_FUNC_INFO;
 
-    geometryLoader.load(SharedCursor::GEOMETRY_PATH);
-    restoreGeometry(QByteArray::fromBase64(geometryLoader.value(SharedCursor::KEY_GEOMETRY).toString().toUtf8()));
-    ui->splitter->restoreState(QByteArray::fromBase64(geometryLoader.value(SharedCursor::KEY_SPLITTER).toString().toUtf8()));
+    _geometryLoader.load(SharedCursor::GEOMETRY_PATH);
+    restoreGeometry(QByteArray::fromBase64(_geometryLoader.value(SharedCursor::KEY_GEOMETRY).toString().toUtf8()));
+    ui->splitter->restoreState(QByteArray::fromBase64(_geometryLoader.value(SharedCursor::KEY_SPLITTER).toString().toUtf8()));
 
     ui->lineEditKeyword->setText(Settings.keyword());
     ui->lineDeviceName->setText(Settings.name());
@@ -51,37 +51,37 @@ void SettingsWidget::clearWidget()
 {
     qDebug() << Q_FUNC_INFO;
 
-    auto itemTerator = listIitemWidgets.constBegin();
-    while (itemTerator != listIitemWidgets.constEnd()) {
+    auto itemTerator = _listIitemWidgets.constBegin();
+    while (itemTerator != _listIitemWidgets.constEnd()) {
         delete itemTerator.value();
         ++itemTerator;
     }
 
-    auto deviceIterator = deviceWidgets.constBegin();
-    while (deviceIterator != deviceWidgets.constEnd()) {
+    auto deviceIterator = _deviceWidgets.constBegin();
+    while (deviceIterator != _deviceWidgets.constEnd()) {
         deviceIterator.value()->disconnect();
         delete deviceIterator.value();
         ++deviceIterator;
     }
 
     ui->listWidgetDevices->clear();
-    listIitemWidgets.clear();
-    deviceWidgets.clear();
-    removeList.clear();
+    _listIitemWidgets.clear();
+    _deviceWidgets.clear();
+    _removeList.clear();
 
-    positioningWidget->clearWidget();
+    _positioningWidget->clearWidget();
 
-    geometryLoader.setValue(SharedCursor::KEY_GEOMETRY, QString::fromUtf8(saveGeometry().toBase64()));
-    geometryLoader.setValue(SharedCursor::KEY_SPLITTER, QString::fromUtf8(ui->splitter->saveState().toBase64()));
-    geometryLoader.save(SharedCursor::GEOMETRY_PATH);
+    _geometryLoader.setValue(SharedCursor::KEY_GEOMETRY, QString::fromUtf8(saveGeometry().toBase64()));
+    _geometryLoader.setValue(SharedCursor::KEY_SPLITTER, QString::fromUtf8(ui->splitter->saveState().toBase64()));
+    _geometryLoader.save(SharedCursor::GEOMETRY_PATH);
 }
 
 void SettingsWidget::setDeviceConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state)
 {
     qDebug() << Q_FUNC_INFO << uuid << state;
 
-    if (deviceWidgets.contains(uuid)) {
-        deviceWidgets.value(uuid)->setState(state);
+    if (_deviceWidgets.contains(uuid)) {
+        _deviceWidgets.value(uuid)->setState(state);
     }
     else {
         createFoundDeviceWidget(Settings.device(uuid));
@@ -95,7 +95,7 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<SharedCursor::Device
 
     qDebug() << Q_FUNC_INFO << device->uuid << device->name << device->self;
 
-    if (deviceWidgets.contains(device->uuid))
+    if (_deviceWidgets.contains(device->uuid))
         return;
 
     DeviceItemWidget *widget = new DeviceItemWidget(this);
@@ -105,32 +105,32 @@ void SettingsWidget::createFoundDeviceWidget(QSharedPointer<SharedCursor::Device
     widget->setState(device->state);
     widget->setSelfState(device->self);
 
-    deviceWidgets.insert(device->uuid, widget);
+    _deviceWidgets.insert(device->uuid, widget);
 
     QListWidgetItem *listItem = new QListWidgetItem;
     listItem->setSizeHint(widget->sizeHint());
 
-    listIitemWidgets.insert(device->uuid, listItem);
+    _listIitemWidgets.insert(device->uuid, listItem);
 
     ui->listWidgetDevices->insertItem((device->self ? 0 : ui->listWidgetDevices->count()), listItem);
     ui->listWidgetDevices->setItemWidget(listItem, widget);
 
     connect(widget, &DeviceItemWidget::removeClicked, this, &SettingsWidget::removeDeviceFromListWidget);
 
-    positioningWidget->addDevice(device);
+    _positioningWidget->addDevice(device);
 }
 
 void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
 {
     qDebug() << Q_FUNC_INFO << uuid;
 
-    if (listIitemWidgets.contains(uuid)) {
-        DeviceItemWidget *deviceWidget = deviceWidgets.value(uuid);
-        QListWidgetItem *listItem = listIitemWidgets.value(uuid);
+    if (_listIitemWidgets.contains(uuid)) {
+        DeviceItemWidget *deviceWidget = _deviceWidgets.value(uuid);
+        QListWidgetItem *listItem = _listIitemWidgets.value(uuid);
 
         ui->listWidgetDevices->removeItemWidget(listItem);
-        listIitemWidgets.remove(uuid);
-        deviceWidgets.remove(uuid);
+        _listIitemWidgets.remove(uuid);
+        _deviceWidgets.remove(uuid);
 
         disconnect(deviceWidget, &DeviceItemWidget::removeClicked, this, &SettingsWidget::removeDeviceFromListWidget);
 
@@ -138,8 +138,8 @@ void SettingsWidget::removeDeviceFromListWidget(const QUuid &uuid)
         delete deviceWidget;
     }
 
-    positioningWidget->removeDevice(uuid);
-    removeList.append(uuid);
+    _positioningWidget->removeDevice(uuid);
+    _removeList.append(uuid);
     Settings.removeDevice(uuid);
 }
 
@@ -156,8 +156,8 @@ void SettingsWidget::saveSettings()
     }
 
     Settings.clearTransits();
-    positioningWidget->normalize();
-    const QVector<ScreenRectItem*> &items = positioningWidget->screenRectItems();
+    _positioningWidget->normalize();
+    const QVector<ScreenRectItem*> &items = _positioningWidget->screenRectItems();
     for (ScreenRectItem* item: items) {
         Settings.setDevicePosition(item->uuid(), item->pos().toPoint());
         Settings.addTransitsToDevice(item->uuid(), item->transits());
@@ -166,7 +166,7 @@ void SettingsWidget::saveSettings()
 
     emit devicesChanged(Settings.devices());
 
-    for (const QUuid &uuid: std::as_const(removeList)) {
+    for (const QUuid &uuid: std::as_const(_removeList)) {
         Settings.removeDevice(uuid);
         emit removeDevice(uuid);
     }

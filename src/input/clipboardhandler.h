@@ -3,7 +3,6 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QMap>
-#include "utils.h"
 
 class ClipboardHandler : public QObject
 {
@@ -23,10 +22,10 @@ signals:
     void message(const QUuid &uuid, const QJsonObject &json);
 
 private:
-    QUuid uuidOwn, uuidMaster, uuidSlave;
-    QMap<QUuid, bool> clipboardHolders;
-    QJsonObject jsonMessage;
-    bool applyingClipboard = false;
+    QUuid _uuidOwn, _uuidMaster, _uuidSlave;
+    QMap<QUuid, bool> _clipboardHolders;
+    QJsonObject _jsonMessage;
+    bool _applyingClipboard = false;
 
     void sendClipboard(const QUuid &uuid);
 };

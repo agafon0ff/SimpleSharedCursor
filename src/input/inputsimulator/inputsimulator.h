@@ -6,11 +6,14 @@
 
 #include "global.h"
 
+struct _XDisplay;
+
 class InputSimulator : public QObject
 {
     Q_OBJECT
 public:
     explicit InputSimulator(QObject *parent = nullptr);
+    ~InputSimulator();
 
 public slots:
     void setControlState(SharedCursor::ControlState state);
@@ -21,13 +24,17 @@ public slots:
     void setWheelEvent(int delta);
 
 private:
-    QMap<int, unsigned long> keymap;
-    SharedCursor::ControlState controlState = SharedCursor::SelfControl;
+    QMap<int, unsigned long> _keymap;
+    SharedCursor::ControlState _controlState = SharedCursor::SelfControl;
 
-    bool releaseProcess = false;
-    QVector<int> pressedKeys;
-    QVector<int> pressedMouse;
+    bool _releaseProcess = false;
+    QVector<int> _pressedKeys;
+    QVector<int> _pressedMouse;
 
     void releasePressedKeys();
     void createKeymap();
+
+#if defined(Q_OS_LINUX)
+    _XDisplay *_display = nullptr;
+#endif
 };

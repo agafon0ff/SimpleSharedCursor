@@ -18,12 +18,12 @@ InputHandler::InputHandler(QWidget *parent)
     setCursor(Qt::BlankCursor);
     setMouseTracking(true);
 
-    jsonKey[SharedCursor::KEY_TYPE] = SharedCursor::KEY_INPUT;
+    _jsonKey[SharedCursor::KEY_TYPE] = SharedCursor::KEY_INPUT;
 }
 
 void InputHandler::setUuid(const QUuid &uuid)
 {
-    ownUuid = uuid;
+    _ownUuid = uuid;
 }
 
 void InputHandler::setCenterIn(const QPoint &pos)
@@ -33,10 +33,10 @@ void InputHandler::setCenterIn(const QPoint &pos)
 
 void InputHandler::setRemoteControlState(const QUuid &master, const QUuid &slave)
 {
-    remoteUuid = slave;
-    isActive = master != slave && ownUuid == master;
+    _remoteUuid = slave;
+    _isActive = master != slave && _ownUuid == master;
 
-    if (isActive) {
+    if (_isActive) {
         show();
         setFocus();
         activateWindow();
@@ -60,7 +60,7 @@ bool InputHandler::event(QEvent *event)
     switch(event->type()) {
     case QEvent::Hide:
     case QEvent::WindowDeactivate:
-        if (isActive) {
+        if (_isActive) {
             show();
             setFocus();
             activateWindow();
@@ -100,10 +100,10 @@ bool InputHandler::event(QEvent *event)
 
 void InputHandler::sendKeyEventMessage(int keycode, bool pressed)
 {
-    jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_KEYBOARD;
-    jsonKey[SharedCursor::KEY_VALUE] = keycode;
-    jsonKey[SharedCursor::KEY_PRESSED] = pressed;
-    emit message(remoteUuid, jsonKey);
+    _jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_KEYBOARD;
+    _jsonKey[SharedCursor::KEY_VALUE] = keycode;
+    _jsonKey[SharedCursor::KEY_PRESSED] = pressed;
+    emit message(_remoteUuid, _jsonKey);
 }
 
 void InputHandler::keyStateChanged(QKeyEvent *event, bool pressed)
@@ -113,22 +113,22 @@ void InputHandler::keyStateChanged(QKeyEvent *event, bool pressed)
 
 void InputHandler::mouseStateChanged(QMouseEvent *event, bool pressed)
 {
-    jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_MOUSE;
-    jsonKey[SharedCursor::KEY_PRESSED] = pressed;
+    _jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_MOUSE;
+    _jsonKey[SharedCursor::KEY_PRESSED] = pressed;
 
     switch(event->button()) {
-    case Qt::LeftButton: jsonKey[SharedCursor::KEY_VALUE] = 0; break;
-    case Qt::MiddleButton: jsonKey[SharedCursor::KEY_VALUE] = 1; break;
-    case Qt::RightButton: jsonKey[SharedCursor::KEY_VALUE] = 2; break;
+    case Qt::LeftButton: _jsonKey[SharedCursor::KEY_VALUE] = 0; break;
+    case Qt::MiddleButton: _jsonKey[SharedCursor::KEY_VALUE] = 1; break;
+    case Qt::RightButton: _jsonKey[SharedCursor::KEY_VALUE] = 2; break;
     default: break;
     }
 
-    emit message(remoteUuid, jsonKey);
+    emit message(_remoteUuid, _jsonKey);
 }
 
 void InputHandler::wheelStateChanged(QWheelEvent *event)
 {
-    jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_WHEEL;
-    jsonKey[SharedCursor::KEY_VALUE] = static_cast<int>(event->angleDelta().y());
-    emit message(remoteUuid, jsonKey);
+    _jsonKey[SharedCursor::KEY_INPUT] = SharedCursor::KEY_WHEEL;
+    _jsonKey[SharedCursor::KEY_VALUE] = static_cast<int>(event->angleDelta().y());
+    emit message(_remoteUuid, _jsonKey);
 }

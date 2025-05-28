@@ -14,17 +14,17 @@ TcpServer::~TcpServer()
     stop();
 }
 
-void TcpServer::setPort(quint16 _port)
+void TcpServer::setPort(quint16 port)
 {
-    qDebug() << Q_FUNC_INFO << _port;
-    port = _port;
+    qDebug() << Q_FUNC_INFO << port;
+    _port = port;
 }
 
 void TcpServer::start()
 {
     qDebug() << Q_FUNC_INFO;
 
-    if (!listen(QHostAddress::Any, port)) {
+    if (!listen(QHostAddress::Any, _port)) {
         qDebug() << Q_FUNC_INFO << "Error: Unable to start TCP server";
     }
 }

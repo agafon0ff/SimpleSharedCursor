@@ -8,11 +8,11 @@ TrayMenu::TrayMenu(QObject *parent)
     : QObject{parent}
 {
     QCommonStyle style;
-    trayMenu.addAction(QIcon("://img/gear.png"),"Settings", this, &TrayMenu::settingsActionTriggered);
-    trayMenu.addAction(QIcon("://img/cross.png"),"Exit", this, []{QApplication::quit();});
+    _trayMenu.addAction(QIcon("://img/gear.png"),"Settings", this, &TrayMenu::settingsActionTriggered);
+    _trayMenu.addAction(QIcon("://img/cross.png"),"Exit", this, []{QApplication::quit();});
 
-    trayIcon.setContextMenu(&trayMenu);
-    trayIcon.setIcon(QIcon("://img/SharedCursor.ico"));
-    trayIcon.setToolTip(SharedCursor::PROGRAM_NAME);
-    trayIcon.show();
+    _trayIcon.setContextMenu(&_trayMenu);
+    _trayIcon.setIcon(QIcon("://img/SharedCursor.ico"));
+    _trayIcon.setToolTip(SharedCursor::PROGRAM_NAME);
+    _trayIcon.show();
 }

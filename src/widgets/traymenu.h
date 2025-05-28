@@ -10,8 +10,8 @@ class TrayMenu : public QObject
     Q_OBJECT
 public:
     explicit TrayMenu(QObject *parent = nullptr);
-    QSystemTrayIcon trayIcon;
-    QMenu trayMenu;
+    QSystemTrayIcon _trayIcon;
+    QMenu _trayMenu;
 
 signals:
     void settingsActionTriggered();

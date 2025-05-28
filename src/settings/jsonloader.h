@@ -12,5 +12,5 @@ public:
     QJsonValue value(const char* key, const QJsonValue &defaultValue = QJsonValue());
 
 private:
-    QJsonObject values;
+    QJsonObject _values;
 };
