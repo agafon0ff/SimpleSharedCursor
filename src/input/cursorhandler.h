@@ -3,7 +3,8 @@
 #include <QObject>
 #include <QJsonObject>
 #include <QSharedPointer>
-#include "utils.h"
+#include <QDateTime>
+#include "global.h"
 
 class CursorHandler : public QObject
 {
@@ -21,6 +22,7 @@ public slots:
     void setDevices(const QMap<QUuid, QSharedPointer<SharedCursor::Device>> &_devices);
 
     void setConnectionState(const QUuid &uuid, SharedCursor::ConnectionState state);
+    void setRemoteCursorDelta(const QPoint &pos);
     void setRemoteCursorPos(const QPoint &pos);
     void setRemoteControlState(const QUuid &master, const QUuid &slave);
 
@@ -46,9 +48,12 @@ private:
     QSharedPointer<SharedCursor::Device> _currentDevice;
     QMap<QUuid, QSharedPointer<SharedCursor::Device>> _devices;
     QMap<QUuid, SharedCursor::ConnectionState> _connnetionStates;
+    QDateTime _lastRemoteCursorTime;
+    int _selfCotrolInSlaveModeCounter = 0;
 
     void timerEvent(QTimerEvent *e) final;
     void checkCursor(const QPoint &pos);
+    void checkSelfControlInSlaveMode(const QPoint &pos);
     void cursorCrossedTransit(const SharedCursor::Transit &transit, const QPoint &pos);
     void sendCursorDelta(const QUuid &uuid, const QPoint &pos);
     void sendCursorPosition(const QUuid &uuid, const QPoint &pos);
