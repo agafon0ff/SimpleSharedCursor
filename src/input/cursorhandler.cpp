@@ -6,7 +6,7 @@
 #include "cursorhandler.h"
 #include "utils.h"
 
-static const int UPDATE_INTERVAL = 25;
+static const int UPDATE_INTERVAL = 18;
 
 CursorHandler::CursorHandler(QObject *parent)
     : QObject{parent}
