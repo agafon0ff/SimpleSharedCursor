@@ -125,6 +125,8 @@ void CursorHandler::setRemoteControlState(const QUuid &master, const QUuid &slav
     else {
         updateControlState(SharedCursor::SelfControl);
         setCursorPosition(_holdCursorPosition);
+        _transitUuid = _ownUuid;
+        _currentDevice = _devices.value(_ownUuid);
     }
 
     qDebug() << Q_FUNC_INFO << master << slave << _controlState;
@@ -220,19 +222,14 @@ void CursorHandler::checkSelfControlInSlaveMode(const QPoint &pos)
     {
         ++_selfCotrolInSlaveModeCounter;
     }
-    else
-    {
-        _selfCotrolInSlaveModeCounter = 0;
-    }
+    else _selfCotrolInSlaveModeCounter = 0;
 
     if (_selfCotrolInSlaveModeCounter > 10)
     {
-        _transitUuid = _ownUuid;
+        emit remoteControl(_transitUuid, _transitUuid);
         updateControlState(SharedCursor::SelfControl);
-        emit remoteControl(_ownUuid, _transitUuid);
         _selfCotrolInSlaveModeCounter = 0;
-
-        qDebug() << Q_FUNC_INFO << _transitUuid << _controlState;
+        _transitUuid = _ownUuid;
     }
 }
 

@@ -17,7 +17,7 @@ public:
 
 public slots:
     void setControlState(SharedCursor::ControlState state);
-    void setCutsorPosition(const QPoint &pos);
+    void setCursorPosition(const QPoint &pos);
     void setCursorDelta(const QPoint &pos);
     void setKeyboardEvent(int keycode, bool state);
     void setMouseEvent(int button, bool state);
