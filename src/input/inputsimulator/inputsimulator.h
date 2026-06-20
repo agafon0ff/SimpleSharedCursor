@@ -1,40 +1,25 @@
 #pragma once
 
 #include <QObject>
-#include <QVector>
-#include <QMap>
+#include <memory>
 
 #include "global.h"
-
-struct _XDisplay;
 
 class InputSimulator : public QObject
 {
     Q_OBJECT
 public:
     explicit InputSimulator(QObject *parent = nullptr);
-    ~InputSimulator();
+    virtual ~InputSimulator();
+    static std::unique_ptr<InputSimulator> create();
 
 public slots:
-    void setControlState(SharedCursor::ControlState state);
-    void setCursorPosition(const QPoint &pos);
-    void setCursorDelta(const QPoint &pos);
-    void setKeyboardEvent(int keycode, bool state);
-    void setMouseEvent(int button, bool state);
-    void setWheelEvent(int delta);
-
-private:
-    QMap<int, unsigned long> _keymap;
-    SharedCursor::ControlState _controlState = SharedCursor::SelfControl;
-
-    bool _releaseProcess = false;
-    QVector<int> _pressedKeys;
-    QVector<int> _pressedMouse;
-
-    void releasePressedKeys();
-    void createKeymap();
-
-#if defined(Q_OS_LINUX)
-    _XDisplay *_display = nullptr;
-#endif
+    virtual void setControlState(SharedCursor::ControlState state) = 0;
+    virtual void setCursorPosition(const QPoint &pos) = 0;
+    virtual void setCursorDelta(const QPoint &pos) = 0;
+    virtual void setKeyboardEvent(int keycode, bool state) = 0;
+    virtual void setMouseEvent(int button, bool state) = 0;
+    virtual void setWheelEvent(int delta) = 0;
 };
+
+using InputSimulatorPtr = std::unique_ptr<InputSimulator>;

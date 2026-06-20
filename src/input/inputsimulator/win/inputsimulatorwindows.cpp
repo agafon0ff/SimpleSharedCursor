@@ -1,25 +1,24 @@
 #include <QtGlobal>
-#if defined(Q_OS_WIN)
 
 #include <QCursor>
 #include <QDebug>
-#include "inputsimulator.h"
+#include "inputsimulatorwindows.h"
 
 #include "windows.h"
 #include "winuser.h"
 
-InputSimulator::InputSimulator(QObject *parent)
-    : QObject{parent}
+InputSimulatorWindows::InputSimulatorWindows(QObject *parent)
+    : InputSimulator{parent}
 {
     createKeymap();
 }
 
-InputSimulator::~InputSimulator()
+InputSimulatorWindows::~InputSimulatorWindows()
 {
 
 }
 
-void InputSimulator::setControlState(SharedCursor::ControlState state)
+void InputSimulatorWindows::setControlState(SharedCursor::ControlState state)
 {
     if (_controlState != state) {
         if (_controlState == SharedCursor::Slave) {
@@ -29,17 +28,17 @@ void InputSimulator::setControlState(SharedCursor::ControlState state)
     }
 }
 
-void InputSimulator::setCursorPosition(const QPoint &pos)
+void InputSimulatorWindows::setCursorPosition(const QPoint &pos)
 {
     QCursor::setPos(pos);
 }
 
-void InputSimulator::setCursorDelta(const QPoint &pos)
+void InputSimulatorWindows::setCursorDelta(const QPoint &pos)
 {
     QCursor::setPos(QCursor::pos() + pos);
 }
 
-void InputSimulator::setKeyboardEvent(int keycode, bool state)
+void InputSimulatorWindows::setKeyboardEvent(int keycode, bool state)
 {
     if (!_releaseProcess) {
         if (state) _pressedKeys.append(keycode);
@@ -70,7 +69,7 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void InputSimulator::setMouseEvent(int button, bool state)
+void InputSimulatorWindows::setMouseEvent(int button, bool state)
 {
     if (!_releaseProcess) {
         if (state) _pressedMouse.append(button);
@@ -102,7 +101,7 @@ void InputSimulator::setMouseEvent(int button, bool state)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void InputSimulator::setWheelEvent(int delta)
+void InputSimulatorWindows::setWheelEvent(int delta)
 {
     INPUT ip;
 
@@ -118,7 +117,7 @@ void InputSimulator::setWheelEvent(int delta)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void InputSimulator::releasePressedKeys()
+void InputSimulatorWindows::releasePressedKeys()
 {
     _releaseProcess = true;
 
@@ -137,7 +136,7 @@ void InputSimulator::releasePressedKeys()
     _releaseProcess = false;
 }
 
-void InputSimulator::createKeymap()
+void InputSimulatorWindows::createKeymap()
 {
     _keymap = {
         { Qt::Key_Escape, VK_ESCAPE },
@@ -250,4 +249,3 @@ void InputSimulator::createKeymap()
         { Qt::Key_AsciiTilde, VK_OEM_3 }
     };
 }
-#endif

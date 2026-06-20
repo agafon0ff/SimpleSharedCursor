@@ -1,29 +1,28 @@
 #include <QtGlobal>
-#if defined(Q_OS_LINUX)
 
 #include <QCursor>
 #include <QDebug>
-#include "inputsimulator.h"
+#include "inputsimulatorlinux.h"
 
 //sudo apt install libxtst-dev
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/extensions/XTest.h>
 
-InputSimulator::InputSimulator(QObject *parent)
-    : QObject{parent}
+InputSimulatorLinux::InputSimulatorLinux(QObject *parent)
+    : InputSimulator{parent}
 {
     _display = XOpenDisplay(nullptr);
     createKeymap();
 }
 
-InputSimulator::~InputSimulator()
+InputSimulatorLinux::~InputSimulatorLinux()
 {
     if (_display)
         XCloseDisplay(_display);
 }
 
-void InputSimulator::setControlState(SharedCursor::ControlState state)
+void InputSimulatorLinux::setControlState(SharedCursor::ControlState state)
 {
     if (_controlState != state) {
         if (_controlState == SharedCursor::Slave) {
@@ -33,17 +32,17 @@ void InputSimulator::setControlState(SharedCursor::ControlState state)
     }
 }
 
-void InputSimulator::setCursorPosition(const QPoint &pos)
+void InputSimulatorLinux::setCursorPosition(const QPoint &pos)
 {
     QCursor::setPos(pos);
 }
 
-void InputSimulator::setCursorDelta(const QPoint &pos)
+void InputSimulatorLinux::setCursorDelta(const QPoint &pos)
 {
     QCursor::setPos(QCursor::pos() + pos);
 }
 
-void InputSimulator::setKeyboardEvent(int keycode, bool state)
+void InputSimulatorLinux::setKeyboardEvent(int keycode, bool state)
 {
     if (!_releaseProcess) {
         if (state) _pressedKeys.append(keycode);
@@ -67,7 +66,7 @@ void InputSimulator::setKeyboardEvent(int keycode, bool state)
     XFlush(_display);
 }
 
-void InputSimulator::setMouseEvent(int button, bool state)
+void InputSimulatorLinux::setMouseEvent(int button, bool state)
 {
     if (!_releaseProcess) {
         if (state) _pressedMouse.append(button);
@@ -90,7 +89,7 @@ void InputSimulator::setMouseEvent(int button, bool state)
     XFlush(_display);
 }
 
-void InputSimulator::setWheelEvent(int delta)
+void InputSimulatorLinux::setWheelEvent(int delta)
 {
     Display *display = XOpenDisplay(nullptr);
     quint32 btnNum = delta < 0 ? Button5 : Button4;
@@ -102,7 +101,7 @@ void InputSimulator::setWheelEvent(int delta)
     XCloseDisplay(display);
 }
 
-void InputSimulator::releasePressedKeys()
+void InputSimulatorLinux::releasePressedKeys()
 {
     _releaseProcess = true;
 
@@ -121,7 +120,7 @@ void InputSimulator::releasePressedKeys()
     _releaseProcess = false;
 }
 
-void InputSimulator::createKeymap()
+void InputSimulatorLinux::createKeymap()
 {
     _keymap = {
         { Qt::Key_Escape, XK_Escape },
@@ -239,4 +238,3 @@ void InputSimulator::createKeymap()
         { Qt::Key_AsciiTilde, XK_asciitilde }
     };
 }
-#endif

@@ -24,8 +24,6 @@ SOURCES += \
     src/input/clipboardhandler.cpp \
     src/input/cursorhandler.cpp \
     src/input/inputhandler.cpp \
-    src/input/inputsimulator/inputsimulatorlinux.cpp \
-    src/input/inputsimulator/inputsimulatorwindows.cpp \
     src/network/broadcastdevicesearch.cpp \
     src/network/deviceconnectmanager.cpp \
     src/network/tcpserver.cpp \
@@ -45,7 +43,6 @@ HEADERS += \
     src/input/clipboardhandler.h \
     src/input/cursorhandler.h \
     src/input/inputhandler.h \
-    src/input/inputsimulator/inputsimulator.h \
     src/network/deviceconnectmanager.h \
     src/network/broadcastdevicesearch.h \
     src/network/tcpserver.h \
@@ -67,6 +64,7 @@ RESOURCES += \
 TRANSLATIONS += \
     tr/ShareCursor_en.ts
 
+include(src/input/inputsimulator/inputsimulator.pri)
 
 win32 {
     !exists($$(OPENSSL_DIR)/include/openssl/evp.h) {
@@ -78,5 +76,9 @@ win32 {
 }
 
 linux:!android {
-    LIBS += -lX11 -lXtst -lcrypto
+    INCLUDEPATH += $$(OPENSSL_DIR)/include
+    LIBS += -lX11 -lXtst -lXext -lcrypto
 }
+
+DISTFILES += \
+    src/input/inputsimulator/inputsimulator.pri

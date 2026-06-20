@@ -3,6 +3,7 @@
 #include <QHostAddress>
 #include <QSharedPointer>
 #include <QString>
+#include <QDebug>
 #include <QLine>
 #include <QUuid>
 #include <QRect>

@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     inputHandler.setGeometry(Settings.screenRect().adjusted(150, 150, -150, -150));
     inputHandler.setCenterIn(Settings.screenRect().center());
 
-    InputSimulator inputSimulator;
+    InputSimulatorPtr inputSimulator = InputSimulator::create();
 
     CursorHandler cursorHandler;
     cursorHandler.setHoldCursorPosition(Settings.screenRect().center());
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     QObject::connect(&cursorCheckerThread, &QThread::started, &cursorHandler, &CursorHandler::start);
     QObject::connect(&cursorCheckerThread, &QThread::finished, &cursorHandler, &CursorHandler::stop);
     QObject::connect(&cursorHandler, &CursorHandler::remoteControl, &inputHandler, &InputHandler::setRemoteControlState);
-    QObject::connect(&cursorHandler, &CursorHandler::controlStateChanged, &inputSimulator, &InputSimulator::setControlState);
+    QObject::connect(&cursorHandler, &CursorHandler::controlStateChanged, inputSimulator.get(), &InputSimulator::setControlState);
     cursorHandler.moveToThread(&cursorCheckerThread);
 
     DeviceConnectManager devConnectManager;
@@ -99,11 +99,11 @@ int main(int argc, char *argv[])
     QObject::connect(&devConnectManager, &DeviceConnectManager::remoteControl, &inputHandler, &InputHandler::setRemoteControlState);
     QObject::connect(&devConnectManager, &DeviceConnectManager::cursorPosition, &cursorHandler, &CursorHandler::setRemoteCursorPos);
     QObject::connect(&devConnectManager, &DeviceConnectManager::cursorDelta, &cursorHandler, &CursorHandler::setRemoteCursorDelta);
-    QObject::connect(&devConnectManager, &DeviceConnectManager::cursorInitPosition, &inputSimulator, &InputSimulator::setCursorPosition);
-    QObject::connect(&devConnectManager, &DeviceConnectManager::cursorDelta, &inputSimulator, &InputSimulator::setCursorDelta);
-    QObject::connect(&devConnectManager, &DeviceConnectManager::keyboardEvent, &inputSimulator, &InputSimulator::setKeyboardEvent);
-    QObject::connect(&devConnectManager, &DeviceConnectManager::mouseEvent, &inputSimulator, &InputSimulator::setMouseEvent);
-    QObject::connect(&devConnectManager, &DeviceConnectManager::wheelEvent, &inputSimulator, &InputSimulator::setWheelEvent);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::cursorInitPosition, inputSimulator.get(), &InputSimulator::setCursorPosition);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::cursorDelta, inputSimulator.get(), &InputSimulator::setCursorDelta);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::keyboardEvent, inputSimulator.get(), &InputSimulator::setKeyboardEvent);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::mouseEvent, inputSimulator.get(), &InputSimulator::setMouseEvent);
+    QObject::connect(&devConnectManager, &DeviceConnectManager::wheelEvent, inputSimulator.get(), &InputSimulator::setWheelEvent);
     QObject::connect(&devConnectManager, &DeviceConnectManager::remoteControl, &clipboardHandler, &ClipboardHandler::setRemoteControlState);
     QObject::connect(&devConnectManager, &DeviceConnectManager::clipboard, &clipboardHandler, &ClipboardHandler::setClipboard);
     QObject::connect(&clipboardHandler, &ClipboardHandler::message, &devConnectManager, &DeviceConnectManager::sendMessage);
