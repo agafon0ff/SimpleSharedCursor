@@ -3,7 +3,7 @@
 #if defined(Q_OS_WINDOWS)
 #include "win/inputsimulatorwindows.h"
 #elif defined(Q_OS_LINUX)
-#include "win/inputsimulatorlinux.h"
+#include "linux/inputsimulatorlinux.h"
 #elif defined(Q_OS_MACOS)
 
 #endif

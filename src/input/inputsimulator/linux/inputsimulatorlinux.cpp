@@ -9,7 +9,7 @@
 #include <X11/keysym.h>
 #include <X11/extensions/XTest.h>
 
-InputSimulatorLinux::InputSimulatorLinux(InputSimulator *parent)
+InputSimulatorLinux::InputSimulatorLinux(QObject *parent)
     : InputSimulator{parent}
 {
     _display = XOpenDisplay(nullptr);

@@ -76,7 +76,8 @@ win32 {
 }
 
 linux:!android {
-    LIBS += -lX11 -lXtst -lcrypto
+    INCLUDEPATH += $$(OPENSSL_DIR)/include
+    LIBS += -lX11 -lXtst -lXext -lcrypto
 }
 
 DISTFILES += \
