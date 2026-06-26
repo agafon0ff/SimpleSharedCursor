@@ -15,5 +15,6 @@ linux{
 }
 
 osx{
-
+    HEADERS += $$PWD/macos/inputsimulatormacos.h
+    SOURCES += $$PWD/macos/inputsimulatormacos.cpp
 }
