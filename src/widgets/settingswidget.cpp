@@ -16,6 +16,7 @@ SettingsWidget::SettingsWidget(QWidget *parent)
     setWindowIcon(QIcon("://img/SharedCursor.ico"));
 
     connect(ui->btnFindDevices, &QPushButton::clicked, this, &SettingsWidget::onBtnFindDevicesClicked);
+    connect(ui->btnApply, &QPushButton::clicked, this, &SettingsWidget::onBtnApplyClicked);
     connect(ui->btnOk, &QPushButton::clicked, this, &SettingsWidget::onBtnOkClicked);
     connect(ui->btnCancel, &QPushButton::clicked, this, &SettingsWidget::onBtnCancelClicked);
 
@@ -176,6 +177,7 @@ void SettingsWidget::saveSettings()
 
 void SettingsWidget::onBtnFindDevicesClicked()
 {
+    saveSettings();
     Settings.resetDevices();
     clearWidget();
     emit findDevices();
