@@ -9,6 +9,8 @@
 ClipboardHandler::ClipboardHandler(QObject *parent)
     : QObject{parent}
 {
+    qDebug() << Q_FUNC_INFO;
+
     const QClipboard *clipboard = QApplication::clipboard();
     connect(clipboard, &QClipboard::dataChanged, this, &ClipboardHandler::onClipboardChanged);
     _jsonMessage[SharedCursor::KEY_TYPE] = SharedCursor::KEY_CLIPBOARD;

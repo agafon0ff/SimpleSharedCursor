@@ -12,6 +12,7 @@
 InputHandler::InputHandler(QWidget *parent)
     : QWidget{parent}
 {
+    qDebug() << Q_FUNC_INFO;
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -108,6 +109,8 @@ void InputHandler::sendKeyEventMessage(int keycode, bool pressed)
 
 void InputHandler::keyStateChanged(QKeyEvent *event, bool pressed)
 {
+    if (event->isAutoRepeat())
+        return;
     sendKeyEventMessage(static_cast<int>(event->key()), pressed);
 }
 
